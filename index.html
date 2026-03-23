@@ -1392,7 +1392,6 @@
     .notif-dropdown { width:280px; right:-50px; }
   }
 </style>
-</head>
 <body>
 
 <!-- ─── AUTH SCREEN ─── -->
@@ -1943,6 +1942,21 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db   = firebase.firestore();
 const auth = firebase.auth();
+
+// ── FIREBASE CONFIG ──
+const firebaseConfig = {
+  apiKey: "AIzaSyDLfOMBzDl-v5TDm_dIkkMM7VuhxqTzLHs",
+  authDomain: "cmg-task-calendar.firebaseapp.com",
+  projectId: "cmg-task-calendar",
+  storageBucket: "cmg-task-calendar.firebasestorage.app",
+  messagingSenderId: "95515134140",
+  appId: "1:95515134140:web:db61f3e94c6a888694a8b9",
+  measurementId: "G-E9KZ2LP6Q5"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const auth = getAuth(app);
 
 // ── CONSTANTS ──
 const ADMIN_EMAIL = "cmgadmin@dubeon.com"; // internal admin marker
@@ -2879,14 +2893,7 @@ function bindAllEvents() {
   });
 
   // Month nav
-  document.getElementById('prevMonth')?.addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    renderCalendar(); renderPanel();
-  });
-  document.getElementById('nextMonth')?.addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar(); renderPanel();
-  });
+  // Month nav handled by onclick below bindAllEvents()
 
   // Notif desktop btn
   document.getElementById('notifBtn')?.addEventListener('click', () => {
@@ -2953,11 +2960,15 @@ document.getElementById('prevMonth').onclick = () => {
   currentDate.setMonth(currentDate.getMonth() - 1);
   renderCalendar();
   renderPanel();
+  if (currentView === 'week') renderWeekView();
+  if (currentView === 'agenda') renderAgendaView();
 };
 document.getElementById('nextMonth').onclick = () => {
   currentDate.setMonth(currentDate.getMonth() + 1);
   renderCalendar();
   renderPanel();
+  if (currentView === 'week') renderWeekView();
+  if (currentView === 'agenda') renderAgendaView();
 };
 
 // ═══════════════════════════════════════════
@@ -4056,8 +4067,6 @@ window.toggleNotifDropdown = toggleNotifDropdown;
 window.clearAllNotifs = clearAllNotifs;
 window.switchView     = switchView;
 window.weekNav        = weekNav;
-</script>
-
 <footer style="
   position: fixed;
   bottom: 0;
