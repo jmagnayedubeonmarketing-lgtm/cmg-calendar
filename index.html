@@ -1943,21 +1943,6 @@ firebase.initializeApp(firebaseConfig);
 const db   = firebase.firestore();
 const auth = firebase.auth();
 
-// ── FIREBASE CONFIG ──
-const firebaseConfig = {
-  apiKey: "AIzaSyDLfOMBzDl-v5TDm_dIkkMM7VuhxqTzLHs",
-  authDomain: "cmg-task-calendar.firebaseapp.com",
-  projectId: "cmg-task-calendar",
-  storageBucket: "cmg-task-calendar.firebasestorage.app",
-  messagingSenderId: "95515134140",
-  appId: "1:95515134140:web:db61f3e94c6a888694a8b9",
-  measurementId: "G-E9KZ2LP6Q5"
-};
-
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-const auth = getAuth(app);
-
 // ── CONSTANTS ──
 const ADMIN_EMAIL = "cmgadmin@dubeon.com"; // internal admin marker
 const ADMIN_USERNAME = "CMGadmin";
@@ -2953,8 +2938,7 @@ function bindAllEvents() {
   });
 }
 
-// Call bindAllEvents after DOM is ready
-bindAllEvents();
+// (bindAllEvents called at very end of script)
 
 document.getElementById('prevMonth').onclick = () => {
   currentDate.setMonth(currentDate.getMonth() - 1);
@@ -3000,20 +2984,26 @@ async function doLogin() {
     // Admin shortcut login
     if (usernameOrEmail === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       try {
-        const cred = await auth.signInWithEmailAndPassword( ADMIN_EMAIL, ADMIN_PASSWORD);
+        const cred = await auth.signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
         let profile = await getUserProfile(cred.user.uid);
         if (!profile) {
           profile = { uid: cred.user.uid, username: ADMIN_USERNAME, name: 'Administrator', email: ADMIN_EMAIL, role: 'admin', status: 'approved', createdAt: new Date().toISOString() };
           await db.collection('users').doc(cred.user.uid).set(profile);
         }
         currentUser = cred.user;
+        appStarted = true; // prevent onAuthStateChanged from firing again
         enterApp(profile);
       } catch(e) {
-        const cred = await auth.createUserWithEmailAndPassword( ADMIN_EMAIL, ADMIN_PASSWORD);
-        const profile = { uid: cred.user.uid, username: ADMIN_USERNAME, name: 'Administrator', email: ADMIN_EMAIL, role: 'admin', status: 'approved', createdAt: new Date().toISOString() };
-        await db.collection('users').doc(cred.user.uid).set(profile);
-        currentUser = cred.user;
-        enterApp(profile);
+        try {
+          const cred = await auth.createUserWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
+          const profile = { uid: cred.user.uid, username: ADMIN_USERNAME, name: 'Administrator', email: ADMIN_EMAIL, role: 'admin', status: 'approved', createdAt: new Date().toISOString() };
+          await db.collection('users').doc(cred.user.uid).set(profile);
+          currentUser = cred.user;
+          appStarted = true;
+          enterApp(profile);
+        } catch(e2) {
+          showMsg('loginMsg', 'Admin error: ' + e2.message, 'error');
+        }
       }
       return;
     }
@@ -3023,19 +3013,16 @@ async function doLogin() {
     const isEmail = usernameOrEmail.includes('@') && usernameOrEmail.includes('.');
 
     if (isEmail) {
-      // Search by email
       const snap = await db.collection('users').where('email', '==', usernameOrEmail).get();
       if (!snap.empty) profile = { uid: snap.docs[0].id, ...snap.docs[0].data() };
     }
 
-    // Always also try by username (with and without @ prefix)
     if (!profile) {
-      const cleanUsername = usernameOrEmail.replace(/^@/, ''); // remove @ if present
+      const cleanUsername = usernameOrEmail.replace(/^@/, '');
       const snap = await db.collection('users').where('username', '==', cleanUsername).get();
       if (!snap.empty) profile = { uid: snap.docs[0].id, ...snap.docs[0].data() };
     }
 
-    // Try with @ prefix too just in case
     if (!profile) {
       const snap = await db.collection('users').where('username', '==', usernameOrEmail).get();
       if (!snap.empty) profile = { uid: snap.docs[0].id, ...snap.docs[0].data() };
@@ -3045,9 +3032,9 @@ async function doLogin() {
     if (profile.status === 'pending') { showMsg('loginMsg', '⏳ Your account is pending admin approval.', 'pending'); return; }
     if (profile.status === 'rejected') { showMsg('loginMsg', '❌ Your account was rejected. Contact admin.', 'error'); return; }
 
-    // Sign in with Firebase Auth using the email on file
-    const cred = await auth.signInWithEmailAndPassword( profile.email, password);
+    const cred = await auth.signInWithEmailAndPassword(profile.email, password);
     currentUser = cred.user;
+    appStarted = true; // prevent onAuthStateChanged double-fire
     try {
       enterApp(profile);
     } catch(appErr) {
@@ -3056,6 +3043,7 @@ async function doLogin() {
     }
 
   } catch(e) {
+    appStarted = false; // reset on error
     if (e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found') {
       showMsg('loginMsg', 'Incorrect password. Please try again.', 'error');
     } else if (e.code === 'auth/too-many-requests') {
@@ -3306,8 +3294,7 @@ document.getElementById('notifBtn').onclick = () => {
 };
 
 // Allow Enter key on login
-document.getElementById('loginPassword').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-document.getElementById('loginUsername').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+// Enter key listeners handled in bindAllEvents()
 
 // ═══════════════════════════════════════════
 // MOBILE JS
@@ -4067,6 +4054,11 @@ window.toggleNotifDropdown = toggleNotifDropdown;
 window.clearAllNotifs = clearAllNotifs;
 window.switchView     = switchView;
 window.weekNav        = weekNav;
+
+// ── BIND ALL EVENTS LAST (after all functions are defined) ──
+bindAllEvents();
+
+</script>
 <footer style="
   position: fixed;
   bottom: 0;
