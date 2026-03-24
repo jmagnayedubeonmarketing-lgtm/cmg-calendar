@@ -1551,7 +1551,7 @@
           <div class="stat-val" id="statTotal">0</div>
           <div class="stat-label">Total Tasks</div>
         </div>
-        <div class="stat-card green" onclick="openStatModal('completed')" title="View completed tasks">
+        <div class="stat-card green" onclick="openStatModal('completed')" title="View completed tasks this month">
           <div class="stat-val" id="statDone">0</div>
           <div class="stat-label">Completed</div>
         </div>
@@ -1559,7 +1559,7 @@
           <div class="stat-val" id="statMonth">0</div>
           <div class="stat-label">This Month</div>
         </div>
-        <div class="stat-card red" onclick="openStatModal('pending')" title="View pending tasks">
+        <div class="stat-card red" onclick="openStatModal('pending')" title="View pending tasks this month">
           <div class="stat-val" id="statPending">0</div>
           <div class="stat-label">Pending</div>
         </div>
@@ -2241,14 +2241,14 @@ function renderStats() {
     const d = new Date(t.date);
     return d.getFullYear() === year && d.getMonth() === month;
   });
-  const done = tasks.filter(t => t.done).length;
-  const monthDone = monthTasks.filter(t => t.done).length;
+  const monthDone    = monthTasks.filter(t => t.done).length;
+  const monthPending = monthTasks.filter(t => !t.done).length;
   const pct = monthTasks.length ? Math.round(monthDone/monthTasks.length*100) : 0;
 
   document.getElementById('statTotal').textContent = tasks.length;
-  document.getElementById('statDone').textContent = done;
+  document.getElementById('statDone').textContent = monthDone;
   document.getElementById('statMonth').textContent = monthTasks.length;
-  document.getElementById('statPending').textContent = tasks.filter(t => !t.done).length;
+  document.getElementById('statPending').textContent = monthPending;
   document.getElementById('progressBar').style.width = pct + '%';
   document.getElementById('progressPct').textContent = pct + '%';
 }
@@ -2462,13 +2462,19 @@ function rescheduleAll() {
 // ── EXPOSE GLOBALS for HTML onclick attributes ──
 // ─── STAT MODAL ───
 const STAT_CONFIG = {
-  all:       { icon: '📋', label: 'All Tasks',        color: '#c8f135', bg: 'rgba(200,241,53,0.12)',   filter: () => [...tasks] },
-  completed: { icon: '✅', label: 'Completed Tasks',  color: '#2ecc71', bg: 'rgba(46,204,113,0.12)',   filter: () => tasks.filter(t => t.done) },
-  month:     { icon: '📅', label: 'This Month\'s Tasks', color: '#74b9ff', bg: 'rgba(116,185,255,0.12)', filter: () => {
+  all:       { icon: '📋', label: 'All Tasks',               color: '#c8f135', bg: 'rgba(200,241,53,0.12)',   filter: () => [...tasks] },
+  completed: { icon: '✅', label: 'Completed This Month',    color: '#2ecc71', bg: 'rgba(46,204,113,0.12)',   filter: () => {
+    const y = currentDate.getFullYear(), m = currentDate.getMonth();
+    return tasks.filter(t => { const d = new Date(t.date); return t.done && d.getFullYear()===y && d.getMonth()===m; });
+  }},
+  month:     { icon: '📅', label: 'This Month\'s Tasks',    color: '#74b9ff', bg: 'rgba(116,185,255,0.12)', filter: () => {
     const y = currentDate.getFullYear(), m = currentDate.getMonth();
     return tasks.filter(t => { const d = new Date(t.date); return d.getFullYear()===y && d.getMonth()===m; });
   }},
-  pending:   { icon: '⏳', label: 'Pending Tasks',    color: '#c0392b', bg: 'rgba(192,57,43,0.12)',    filter: () => tasks.filter(t => !t.done) },
+  pending:   { icon: '⏳', label: 'Pending This Month',      color: '#c0392b', bg: 'rgba(192,57,43,0.12)',    filter: () => {
+    const y = currentDate.getFullYear(), m = currentDate.getMonth();
+    return tasks.filter(t => { const d = new Date(t.date); return !t.done && d.getFullYear()===y && d.getMonth()===m; });
+  }},
 };
 
 function openStatModal(type) {
@@ -3352,14 +3358,14 @@ function renderMobStats() {
     const d = new Date(t.date);
     return d.getFullYear() === year && d.getMonth() === month;
   });
-  const done = tasks.filter(t => t.done).length;
-  const monthDone = monthTasks.filter(t => t.done).length;
+  const monthDone    = monthTasks.filter(t => t.done).length;
+  const monthPending = monthTasks.filter(t => !t.done).length;
   const pct = monthTasks.length ? Math.round(monthDone/monthTasks.length*100) : 0;
 
   document.getElementById('mStatTotal').textContent = tasks.length;
-  document.getElementById('mStatDone').textContent = done;
+  document.getElementById('mStatDone').textContent = monthDone;
   document.getElementById('mStatMonth').textContent = monthTasks.length;
-  document.getElementById('mStatPending').textContent = tasks.filter(t => !t.done).length;
+  document.getElementById('mStatPending').textContent = monthPending;
   document.getElementById('mProgressBar').style.width = pct + '%';
   document.getElementById('mProgressPct').textContent = pct + '%';
 
