@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CMG SocMed Activities & Events Calendar</title>
+<title>CMG Task Calendar</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1418,7 +1418,7 @@
 <!-- ─── AUTH SCREEN ─── -->
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-card">
-    <div class="auth-logo"><div class="auth-logo-dot"></div>CMG Task Management</div>
+    <div class="auth-logo"><div class="auth-logo-dot"></div>CMG Task Calendar</div>
     <div class="auth-subtitle">Dubeon Corporation</div>
 
     <div class="auth-tabs">
@@ -1486,7 +1486,7 @@
 <header>
   <div class="logo">
     <div class="logo-dot"></div>
-    CMG SocMed Activities & Events Calendar  </div>
+    CMG Task Calendar  </div>
   <div class="header-right">
     <button onclick="openAnalytics()" style="
       background: var(--surface);
@@ -1611,6 +1611,42 @@
           <span style="color:var(--text-dim)">Special Non-Working</span>
         </div>
       </div>
+    </div>
+
+    <!-- MATERIALS GENERATION SECTION -->
+    <div class="sidebar-section" id="materialsSection">
+      <h3>🎨 Materials Generation</h3>
+      <div id="matLinkList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+      <div id="matAddForm" style="display:none;flex-direction:column;gap:6px;margin-bottom:8px">
+        <input id="matLinkTitle" placeholder="Title (e.g. Canva — May Layouts)" style="
+          background:var(--bg);border:1px solid var(--border);border-radius:6px;
+          padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;
+          font-size:0.75rem;outline:none;width:100%;transition:border-color 0.2s;
+        " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+        <input id="matLinkUrl" placeholder="https://canva.com/..." style="
+          background:var(--bg);border:1px solid var(--border);border-radius:6px;
+          padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;
+          font-size:0.75rem;outline:none;width:100%;transition:border-color 0.2s;
+        " onfocus="this.style.borderColor='var(--accent3)'" onblur="this.style.borderColor='var(--border)'" />
+        <div style="display:flex;gap:6px">
+          <button onclick="saveMaterialLink()" style="
+            flex:1;background:var(--accent);color:#0a0a0f;border:none;border-radius:6px;
+            padding:7px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;
+            cursor:pointer;transition:all 0.15s;letter-spacing:0.03em;
+          ">Save</button>
+          <button onclick="cancelMaterialLink()" style="
+            flex:1;background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);
+            border-radius:6px;padding:7px;font-family:'Syne',sans-serif;font-weight:700;
+            font-size:0.72rem;cursor:pointer;transition:all 0.15s;
+          ">Cancel</button>
+        </div>
+      </div>
+      <button onclick="showMatAddForm()" id="matAddBtn" style="
+        width:100%;background:rgba(107,159,255,0.08);border:1px dashed rgba(107,159,255,0.35);
+        border-radius:7px;padding:8px;color:var(--accent3);font-family:'Syne',sans-serif;
+        font-weight:700;font-size:0.75rem;cursor:pointer;transition:all 0.2s;
+        display:flex;align-items:center;justify-content:center;gap:6px;
+      ">＋ Add Link</button>
     </div>
 
     <div class="sidebar-section" id="adminBtnWrap" style="display:none">
@@ -2513,7 +2549,7 @@ function requestNotifPermission() {
 function sendNotification(task) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   const cat = CATEGORIES.find(c => c.id === task.category) || CATEGORIES[CATEGORIES.length - 1];
-  const n = new Notification(`⏰ CMG SocMed Activities & Events Calendar`, {
+  const n = new Notification(`⏰ CMG Task Calendar`, {
     body: `${cat.icon || '📌'} ${task.title}${task.notes ? '\n' + task.notes : ''}`,
     icon: 'https://cdn-icons-png.flaticon.com/512/1827/1827392.png',
     tag: String(task.id),
@@ -2848,7 +2884,7 @@ function exportToPDF() {
   const rate = tasks.length ? Math.round(done/tasks.length*100) : 0;
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>CMG SocMed Activities & Events Calendar Report</title>
+  <title>CMG Task Calendar Report</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 30px; color: #222; }
     h1 { color: #0a0a0f; margin-bottom: 4px; }
@@ -2863,7 +2899,7 @@ function exportToPDF() {
     tbody tr:nth-child(even) { background:#f9f9f9; }
     @media print { body { padding: 0; } }
   </style></head><body>
-  <h1>📋 CMG SocMed Activities & Events Calendar</h1>
+  <h1>📋 CMG Task Calendar</h1>
   <div class="meta">Dubeon Corporation · Exported on ${new Date().toLocaleString()}</div>
   <div class="stats">
     <div class="stat"><div class="stat-val">${tasks.length}</div><div class="stat-label">Total Tasks</div></div>
@@ -4162,6 +4198,90 @@ window.toggleNotifDropdown = toggleNotifDropdown;
 window.clearAllNotifs = clearAllNotifs;
 window.switchView     = switchView;
 window.weekNav        = weekNav;
+
+// ═══════════════════════════════════════════
+// MATERIALS GENERATION
+// ═══════════════════════════════════════════
+let materialLinks = JSON.parse(localStorage.getItem('cmg_material_links') || '[]');
+
+function saveMaterialLinksToStorage() {
+  localStorage.setItem('cmg_material_links', JSON.stringify(materialLinks));
+}
+
+function renderMaterialLinks() {
+  const container = document.getElementById('matLinkList');
+  if (!container) return;
+  if (!materialLinks.length) {
+    container.innerHTML = `<div style="font-size:0.72rem;color:var(--text-muted);text-align:center;padding:6px 0">No links yet. Add your Canva or design links below.</div>`;
+    return;
+  }
+  container.innerHTML = '';
+  materialLinks.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.style.cssText = `display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;transition:border-color 0.15s;`;
+    el.onmouseenter = () => el.style.borderColor = 'rgba(107,159,255,0.4)';
+    el.onmouseleave = () => el.style.borderColor = 'var(--border)';
+    el.innerHTML = `
+      <span style="font-size:0.95rem;flex-shrink:0">🎨</span>
+      <a href="${item.url}" target="_blank" rel="noopener" style="
+        flex:1;font-family:'Syne',sans-serif;font-weight:600;font-size:0.75rem;
+        color:var(--accent3);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      " title="${item.url}">${item.title}</a>
+      <button onclick="deleteMaterialLink(${i})" title="Remove" style="
+        background:none;border:none;color:var(--text-muted);cursor:pointer;
+        font-size:0.75rem;padding:2px 4px;border-radius:3px;flex-shrink:0;transition:color 0.15s;
+      " onmouseenter="this.style.color='#ff6b6b'" onmouseleave="this.style.color='var(--text-muted)'">✕</button>
+    `;
+    container.appendChild(el);
+  });
+}
+
+function showMatAddForm() {
+  document.getElementById('matAddForm').style.display = 'flex';
+  document.getElementById('matAddBtn').style.display = 'none';
+  document.getElementById('matLinkTitle').focus();
+}
+
+function cancelMaterialLink() {
+  document.getElementById('matAddForm').style.display = 'none';
+  document.getElementById('matAddBtn').style.display = 'flex';
+  document.getElementById('matLinkTitle').value = '';
+  document.getElementById('matLinkUrl').value = '';
+}
+
+function saveMaterialLink() {
+  const title = document.getElementById('matLinkTitle').value.trim();
+  let url = document.getElementById('matLinkUrl').value.trim();
+  if (!title || !url) { alert('Please enter both a title and a URL.'); return; }
+  if (!url.startsWith('http')) url = 'https://' + url;
+  materialLinks.push({ title, url });
+  saveMaterialLinksToStorage();
+  renderMaterialLinks();
+  cancelMaterialLink();
+}
+
+function deleteMaterialLink(idx) {
+  if (!confirm('Remove this link?')) return;
+  materialLinks.splice(idx, 1);
+  saveMaterialLinksToStorage();
+  renderMaterialLinks();
+}
+
+// Allow Enter key to save material link
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('matAddForm')?.style.display === 'flex') {
+    saveMaterialLink();
+  }
+});
+
+// Expose globals
+window.showMatAddForm     = showMatAddForm;
+window.saveMaterialLink   = saveMaterialLink;
+window.cancelMaterialLink = cancelMaterialLink;
+window.deleteMaterialLink = deleteMaterialLink;
+
+// Init on load
+renderMaterialLinks();
 
 // ── BIND ALL EVENTS LAST (after all functions are defined) ──
 bindAllEvents();
