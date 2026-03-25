@@ -3291,6 +3291,7 @@ function enterApp(profile) {
   }
 
   subscribeToTasks();
+  subscribeToMaterialLinks();
 
   const todayKey = today();
   selectedDate = todayKey;
@@ -4200,13 +4201,9 @@ window.switchView     = switchView;
 window.weekNav        = weekNav;
 
 // ═══════════════════════════════════════════
-// MATERIALS GENERATION
+// MATERIALS GENERATION (Firestore real-time)
 // ═══════════════════════════════════════════
-let materialLinks = JSON.parse(localStorage.getItem('cmg_material_links') || '[]');
-
-function saveMaterialLinksToStorage() {
-  localStorage.setItem('cmg_material_links', JSON.stringify(materialLinks));
-}
+let materialLinks = [];
 
 function renderMaterialLinks() {
   const container = document.getElementById('matLinkList');
@@ -4216,7 +4213,7 @@ function renderMaterialLinks() {
     return;
   }
   container.innerHTML = '';
-  materialLinks.forEach((item, i) => {
+  materialLinks.forEach((item) => {
     const el = document.createElement('div');
     el.style.cssText = `display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;transition:border-color 0.15s;`;
     el.onmouseenter = () => el.style.borderColor = 'rgba(107,159,255,0.4)';
@@ -4227,12 +4224,19 @@ function renderMaterialLinks() {
         flex:1;font-family:'Syne',sans-serif;font-weight:600;font-size:0.75rem;
         color:var(--accent3);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
       " title="${item.url}">${item.title}</a>
-      <button onclick="deleteMaterialLink(${i})" title="Remove" style="
+      <button onclick="deleteMaterialLink('${item._id}')" title="Remove" style="
         background:none;border:none;color:var(--text-muted);cursor:pointer;
         font-size:0.75rem;padding:2px 4px;border-radius:3px;flex-shrink:0;transition:color 0.15s;
       " onmouseenter="this.style.color='#ff6b6b'" onmouseleave="this.style.color='var(--text-muted)'">✕</button>
     `;
     container.appendChild(el);
+  });
+}
+
+function subscribeToMaterialLinks() {
+  db.collection('material_links').orderBy('createdAt').onSnapshot(snap => {
+    materialLinks = snap.docs.map(d => ({ ...d.data(), _id: d.id }));
+    renderMaterialLinks();
   });
 }
 
@@ -4249,22 +4253,26 @@ function cancelMaterialLink() {
   document.getElementById('matLinkUrl').value = '';
 }
 
-function saveMaterialLink() {
+async function saveMaterialLink() {
   const title = document.getElementById('matLinkTitle').value.trim();
   let url = document.getElementById('matLinkUrl').value.trim();
   if (!title || !url) { alert('Please enter both a title and a URL.'); return; }
   if (!url.startsWith('http')) url = 'https://' + url;
-  materialLinks.push({ title, url });
-  saveMaterialLinksToStorage();
-  renderMaterialLinks();
+  await db.collection('material_links').add({
+    title,
+    url,
+    addedBy: currentUserProfile?.name || 'Unknown',
+    createdAt: new Date().toISOString()
+  });
+  addInAppNotif(`🎨 New Material Link Added`, `"${title}" was added by ${currentUserProfile?.name || 'Someone'}`, null);
   cancelMaterialLink();
 }
 
-function deleteMaterialLink(idx) {
+async function deleteMaterialLink(id) {
   if (!confirm('Remove this link?')) return;
-  materialLinks.splice(idx, 1);
-  saveMaterialLinksToStorage();
-  renderMaterialLinks();
+  const item = materialLinks.find(m => m._id === id);
+  await db.collection('material_links').doc(id).delete();
+  addInAppNotif(`🗑️ Material Link Removed`, `"${item?.title || 'A link'}" was removed by ${currentUserProfile?.name || 'Someone'}`, null);
 }
 
 // Allow Enter key to save material link
@@ -4279,9 +4287,6 @@ window.showMatAddForm     = showMatAddForm;
 window.saveMaterialLink   = saveMaterialLink;
 window.cancelMaterialLink = cancelMaterialLink;
 window.deleteMaterialLink = deleteMaterialLink;
-
-// Init on load
-renderMaterialLinks();
 
 // ── BIND ALL EVENTS LAST (after all functions are defined) ──
 bindAllEvents();
