@@ -1613,7 +1613,7 @@
     </div>
 
     <div class="sidebar-section">
-      <h3>Categories</h3>
+      <h3>Categories <span id="catMonthLabel" style="font-family:'DM Mono',monospace;font-weight:400;font-size:0.62rem;color:var(--text-muted);text-transform:none;letter-spacing:0"></span></h3>
       <div id="catList"></div>
     </div>
 
@@ -2490,10 +2490,22 @@ function renderCategories() {
   const container = document.getElementById('catList');
   container.innerHTML = '';
 
+  const year  = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const monthTasks = tasks.filter(t => {
+    const d = new Date(t.date);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+
+  // Update the month label next to "Categories"
+  const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const labelEl = document.getElementById('catMonthLabel');
+  if (labelEl) labelEl.textContent = `— ${monthName}`;
+
   TOP_CATS.forEach(cat => {
     const count = cat.isSocialParent
-      ? tasks.filter(t => SOCIAL_PLATFORMS.some(p => p.id === t.category)).length
-      : tasks.filter(t => t.category === cat.id).length;
+      ? monthTasks.filter(t => SOCIAL_PLATFORMS.some(p => p.id === t.category)).length
+      : monthTasks.filter(t => t.category === cat.id).length;
 
     const item = document.createElement('div');
     item.className = 'cat-item';
@@ -2509,7 +2521,7 @@ function renderCategories() {
 
     if (cat.isSocialParent) {
       SOCIAL_PLATFORMS.forEach(p => {
-        const pCount = tasks.filter(t => t.category === p.id).length;
+        const pCount = monthTasks.filter(t => t.category === p.id).length;
         const sub = document.createElement('div');
         sub.className = 'cat-sub-item';
         sub.style.cursor = 'pointer';
@@ -4184,8 +4196,8 @@ function renderMobStats() {
   container.innerHTML = '';
   TOP_CATS.forEach(cat => {
     const count = cat.isSocialParent
-      ? tasks.filter(t => SOCIAL_PLATFORMS.some(p => p.id === t.category)).length
-      : tasks.filter(t => t.category === cat.id).length;
+      ? monthTasks.filter(t => SOCIAL_PLATFORMS.some(p => p.id === t.category)).length
+      : monthTasks.filter(t => t.category === cat.id).length;
     const item = document.createElement('div');
     item.className = 'cat-item';
     item.style.cursor = 'pointer';
@@ -4194,7 +4206,7 @@ function renderMobStats() {
     container.appendChild(item);
     if (cat.isSocialParent) {
       SOCIAL_PLATFORMS.forEach(p => {
-        const pCount = tasks.filter(t => t.category === p.id).length;
+        const pCount = monthTasks.filter(t => t.category === p.id).length;
         const sub = document.createElement('div');
         sub.className = 'cat-sub-item';
         sub.style.cursor = 'pointer';
