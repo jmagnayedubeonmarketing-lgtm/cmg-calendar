@@ -2876,6 +2876,7 @@ function renderCategoryChart() {
 function renderWeeklyChart() {
   const weeks = [];
   const now = new Date();
+  const todayKey = today();
   for (let i = 7; i >= 0; i--) {
     const start = new Date(now);
     start.setDate(now.getDate() - (i * 7) - now.getDay());
@@ -2883,10 +2884,11 @@ function renderWeeklyChart() {
     const end = new Date(start); end.setDate(start.getDate() + 6); end.setHours(23,59,59,999);
     const weekTasks = tasks.filter(t => { const d = new Date(t.date); return d >= start && d <= end; });
     weeks.push({
-      label: `${start.toLocaleString('default',{month:'short',day:'numeric'})}`,
-      total: weekTasks.length,
-      done:  weekTasks.filter(t => t.done).length,
-      pending: weekTasks.filter(t => !t.done).length,
+      label:    `${start.toLocaleString('default',{month:'short',day:'numeric'})}`,
+      total:    weekTasks.length,
+      done:     weekTasks.filter(t => t.done).length,
+      pending:  weekTasks.filter(t => !t.done && t.date <= todayKey).length,
+      upcoming: weekTasks.filter(t => !t.done && t.date > todayKey).length,
     });
   }
 
@@ -2907,8 +2909,9 @@ function renderWeeklyChart() {
     data: {
       labels: weeks.map(w => w.label),
       datasets: [
-        { label: 'Completed', data: weeks.map(w => w.done),    backgroundColor: '#2ecc71', borderRadius: 4 },
-        { label: 'Pending',   data: weeks.map(w => w.pending), backgroundColor: '#c0392b', borderRadius: 4 },
+        { label: 'Completed', data: weeks.map(w => w.done),     backgroundColor: '#2ecc71', borderRadius: 4 },
+        { label: 'Pending',   data: weeks.map(w => w.pending),  backgroundColor: '#c0392b', borderRadius: 4 },
+        { label: 'Upcoming',  data: weeks.map(w => w.upcoming), backgroundColor: '#a29bfe', borderRadius: 4 },
       ]
     },
     options: {
@@ -2926,15 +2929,18 @@ function renderWeeklyChart() {
 function renderMonthlyChart() {
   const months = [];
   const now = new Date();
+  const todayKey = today();
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const y = d.getFullYear(), m = d.getMonth();
     const mTasks = tasks.filter(t => { const td = new Date(t.date); return td.getFullYear()===y && td.getMonth()===m; });
     months.push({
-      label: d.toLocaleString('default', { month: 'short', year: '2-digit' }),
-      total: mTasks.length,
-      done:  mTasks.filter(t => t.done).length,
-      rate:  mTasks.length ? Math.round(mTasks.filter(t=>t.done).length/mTasks.length*100) : 0,
+      label:    d.toLocaleString('default', { month: 'short', year: '2-digit' }),
+      total:    mTasks.length,
+      done:     mTasks.filter(t => t.done).length,
+      pending:  mTasks.filter(t => !t.done && t.date <= todayKey).length,
+      upcoming: mTasks.filter(t => !t.done && t.date > todayKey).length,
+      rate:     mTasks.length ? Math.round(mTasks.filter(t=>t.done).length/mTasks.length*100) : 0,
     });
   }
 
@@ -2966,6 +2972,16 @@ function renderMonthlyChart() {
           tension: 0.4, fill: true, pointBackgroundColor: '#2ecc71', pointRadius: 5
         },
         {
+          label: 'Pending', data: months.map(m => m.pending),
+          borderColor: '#ff6b6b', backgroundColor: 'transparent',
+          tension: 0.4, borderDash: [3,3], pointBackgroundColor: '#ff6b6b', pointRadius: 4
+        },
+        {
+          label: 'Upcoming', data: months.map(m => m.upcoming),
+          borderColor: '#a29bfe', backgroundColor: 'transparent',
+          tension: 0.4, borderDash: [3,3], pointBackgroundColor: '#a29bfe', pointRadius: 4
+        },
+        {
           label: 'Rate %', data: months.map(m => m.rate),
           borderColor: '#74b9ff', backgroundColor: 'transparent',
           tension: 0.4, borderDash: [4,4], pointBackgroundColor: '#74b9ff', pointRadius: 4,
@@ -2988,19 +3004,22 @@ function renderMonthlyChart() {
 // ── 👤 BY ASSIGNEE CHART ──
 let chartAssignee = null;
 function renderAssigneeChart() {
+  const todayKey = today();
   const assigneeMap = {};
   tasks.forEach(t => {
     const name = t.assignedTo || 'Unassigned';
-    if (!assigneeMap[name]) assigneeMap[name] = { total: 0, done: 0 };
+    if (!assigneeMap[name]) assigneeMap[name] = { total: 0, done: 0, pending: 0, upcoming: 0 };
     assigneeMap[name].total++;
     if (t.done) assigneeMap[name].done++;
+    else if (t.date <= todayKey) assigneeMap[name].pending++;
+    else assigneeMap[name].upcoming++;
   });
 
-  const names  = Object.keys(assigneeMap);
-  const totals = names.map(n => assigneeMap[n].total);
-  const dones  = names.map(n => assigneeMap[n].done);
-  const pendings = names.map(n => assigneeMap[n].total - assigneeMap[n].done);
-  const palette = ['#c8f135','#6b9fff','#ff9f43','#a29bfe','#48dbfb','#fd79a8','#2ecc71','#ff6b6b'];
+  const names    = Object.keys(assigneeMap);
+  const dones    = names.map(n => assigneeMap[n].done);
+  const pendings = names.map(n => assigneeMap[n].pending);
+  const upcomings= names.map(n => assigneeMap[n].upcoming);
+  const palette  = ['#c8f135','#6b9fff','#ff9f43','#a29bfe','#48dbfb','#fd79a8','#2ecc71','#ff6b6b'];
 
   const topAssignee = names.reduce((a, b) => assigneeMap[a].done >= assigneeMap[b].done ? a : b, names[0] || '—');
 
@@ -3017,8 +3036,9 @@ function renderAssigneeChart() {
     data: {
       labels: names,
       datasets: [
-        { label: 'Completed', data: dones,    backgroundColor: '#2ecc71', borderRadius: 4 },
-        { label: 'Pending',   data: pendings, backgroundColor: '#c0392b', borderRadius: 4 },
+        { label: 'Completed', data: dones,     backgroundColor: '#2ecc71', borderRadius: 4 },
+        { label: 'Pending',   data: pendings,  backgroundColor: '#c0392b', borderRadius: 4 },
+        { label: 'Upcoming',  data: upcomings, backgroundColor: '#a29bfe', borderRadius: 4 },
       ]
     },
     options: {
@@ -3032,11 +3052,14 @@ function renderAssigneeChart() {
   });
 
   document.getElementById('assigneeLegend').innerHTML = names.map((n, i) => {
-    const rate = assigneeMap[n].total ? Math.round(assigneeMap[n].done / assigneeMap[n].total * 100) : 0;
+    const r = assigneeMap[n];
+    const rate = r.total ? Math.round(r.done / r.total * 100) : 0;
     return `<div class="legend-item">
       <div class="legend-dot" style="background:${palette[i % palette.length]}"></div>
       <span class="legend-label">${n}</span>
-      <span class="legend-val" style="color:${palette[i % palette.length]}">${assigneeMap[n].done}/${assigneeMap[n].total}</span>
+      <span class="legend-val" style="color:${palette[i % palette.length]}">${r.done}/${r.total}</span>
+      <span style="font-size:0.62rem;color:#ff6b6b;margin-left:4px">⏳${r.pending}</span>
+      <span style="font-size:0.62rem;color:#a29bfe;margin-left:4px">🗓️${r.upcoming}</span>
       <span style="font-size:0.65rem;color:var(--text-muted);margin-left:2px">${rate}%</span>
     </div>`;
   }).join('');
@@ -3045,13 +3068,16 @@ function renderAssigneeChart() {
 // ── 📱 PLATFORM BREAKDOWN CHART ──
 let chartPlatform = null;
 function renderPlatformChart() {
+  const todayKey = today();
   const platMap = {};
-  SOCIAL_PLATFORMS.forEach(p => { platMap[p.id] = { label: p.label, icon: p.icon, color: p.color, total: 0, done: 0 }; });
+  SOCIAL_PLATFORMS.forEach(p => { platMap[p.id] = { label: p.label, icon: p.icon, color: p.color, total: 0, done: 0, pending: 0, upcoming: 0 }; });
 
   tasks.forEach(t => {
     if (platMap[t.category]) {
       platMap[t.category].total++;
       if (t.done) platMap[t.category].done++;
+      else if (t.date <= todayKey) platMap[t.category].pending++;
+      else platMap[t.category].upcoming++;
     }
   });
 
@@ -3076,7 +3102,8 @@ function renderPlatformChart() {
       labels: allPlats.map(p => `${p.icon} ${p.label}`),
       datasets: [
         { label: 'Completed', data: allPlats.map(p => p.done),            backgroundColor: allPlats.map(p => p.color + 'cc'), borderRadius: 4 },
-        { label: 'Pending',   data: allPlats.map(p => p.total - p.done),  backgroundColor: allPlats.map(p => p.color + '44'), borderRadius: 4 },
+        { label: 'Pending',   data: allPlats.map(p => p.pending),         backgroundColor: '#c0392b44', borderRadius: 4 },
+        { label: 'Upcoming',  data: allPlats.map(p => p.upcoming),        backgroundColor: '#a29bfe44', borderRadius: 4 },
       ]
     },
     options: {
@@ -3095,6 +3122,8 @@ function renderPlatformChart() {
       <div class="legend-dot" style="background:${p.color}"></div>
       <span class="legend-label">${p.icon} ${p.label}</span>
       <span class="legend-val" style="color:${p.color}">${p.done}/${p.total}</span>
+      <span style="font-size:0.62rem;color:#ff6b6b;margin-left:4px">⏳${p.pending}</span>
+      <span style="font-size:0.62rem;color:#a29bfe;margin-left:4px">🗓️${p.upcoming}</span>
       <span style="font-size:0.65rem;color:var(--text-muted);margin-left:2px">${rate}%</span>
     </div>`;
   }).join('');
@@ -3254,7 +3283,7 @@ function exportToExcel() {
   const taskRows = tasks.map(t => {
     const cat = CATEGORIES.find(c => c.id === t.category) || CATEGORIES[CATEGORIES.length-1];
     const todayKey = today();
-    const isOverdue = !t.done && t.date < todayKey;
+    const status = t.done ? 'Completed' : t.date < todayKey ? 'Overdue' : t.date === todayKey ? 'Pending' : 'Upcoming';
     return {
       'Title':       t.title,
       'Category':    cat.label,
@@ -3263,7 +3292,7 @@ function exportToExcel() {
       'Date':        t.date,
       'Time':        t.time || '',
       'Priority':    t.priority || 'normal',
-      'Status':      t.done ? 'Completed' : isOverdue ? 'OVERDUE' : 'Pending',
+      'Status':      status,
       'Notes':       t.notes || '',
     };
   });
@@ -3273,39 +3302,45 @@ function exportToExcel() {
 
   // ── Sheet 2: By Assignee ──
   const assigneeMap = {};
+  const todayKeyX = today();
   tasks.forEach(t => {
     const name = t.assignedTo || 'Unassigned';
-    if (!assigneeMap[name]) assigneeMap[name] = { total: 0, done: 0, overdue: 0 };
+    if (!assigneeMap[name]) assigneeMap[name] = { total: 0, done: 0, pending: 0, upcoming: 0 };
     assigneeMap[name].total++;
     if (t.done) assigneeMap[name].done++;
-    if (!t.done && t.date < today()) assigneeMap[name].overdue++;
+    else if (t.date <= todayKeyX) assigneeMap[name].pending++;
+    else assigneeMap[name].upcoming++;
   });
   const assigneeRows = Object.keys(assigneeMap).map(name => ({
     'Assignee':        name,
     'Total Tasks':     assigneeMap[name].total,
     'Completed':       assigneeMap[name].done,
-    'Pending':         assigneeMap[name].total - assigneeMap[name].done,
-    'Overdue':         assigneeMap[name].overdue,
+    'Pending':         assigneeMap[name].pending,
+    'Upcoming':        assigneeMap[name].upcoming,
     'Completion Rate': assigneeMap[name].total ? Math.round(assigneeMap[name].done / assigneeMap[name].total * 100) + '%' : '0%',
   }));
   const ws2 = XLSX.utils.json_to_sheet(assigneeRows);
-  ws2['!cols'] = [{wch:22},{wch:14},{wch:12},{wch:12},{wch:10},{wch:18}];
+  ws2['!cols'] = [{wch:22},{wch:14},{wch:12},{wch:12},{wch:12},{wch:18}];
   XLSX.utils.book_append_sheet(wb, ws2, 'By Assignee');
 
   // ── Sheet 3: Platform Breakdown ──
+  const todayKeyP = today();
   const platRows = SOCIAL_PLATFORMS.map(p => {
     const platTasks = tasks.filter(t => t.category === p.id);
-    const done = platTasks.filter(t => t.done).length;
+    const done     = platTasks.filter(t => t.done).length;
+    const pending  = platTasks.filter(t => !t.done && t.date <= todayKeyP).length;
+    const upcoming = platTasks.filter(t => !t.done && t.date > todayKeyP).length;
     return {
       'Platform':        p.label,
       'Total Tasks':     platTasks.length,
       'Completed':       done,
-      'Pending':         platTasks.length - done,
+      'Pending':         pending,
+      'Upcoming':        upcoming,
       'Completion Rate': platTasks.length ? Math.round(done / platTasks.length * 100) + '%' : '0%',
     };
   });
   const ws3 = XLSX.utils.json_to_sheet(platRows);
-  ws3['!cols'] = [{wch:14},{wch:14},{wch:12},{wch:12},{wch:18}];
+  ws3['!cols'] = [{wch:14},{wch:14},{wch:12},{wch:12},{wch:12},{wch:18}];
   XLSX.utils.book_append_sheet(wb, ws3, 'Platform Breakdown');
 
   // ── Sheet 4: Overdue Tasks ──
@@ -3495,16 +3530,15 @@ function generatePDFReport() {
     .sort((a, b) => a.date.localeCompare(b.date))
     .map(t => {
       const cat = CATEGORIES.find(c => c.id === t.category) || CATEGORIES[CATEGORIES.length-1];
-      const isOverdue = !t.done && t.date < todayKey;
+      const status = t.done ? '✓ Done' : t.date < todayKey ? '⚠️ Overdue' : t.date === todayKey ? '⏳ Pending' : '🗓️ Upcoming';
+      const statusColor = t.done ? '#2ecc71' : t.date <= todayKey ? '#e74c3c' : '#a29bfe';
       return `<tr style="border-bottom:1px solid #eee">
         <td style="padding:7px 8px">${t.title}</td>
         <td style="padding:7px 8px">${cat.label}</td>
         <td style="padding:7px 8px">${t.assignedTo || '—'}</td>
         <td style="padding:7px 8px">${t.date}</td>
         <td style="padding:7px 8px">${t.priority || 'normal'}</td>
-        <td style="padding:7px 8px;color:${t.done?'#2ecc71':isOverdue?'#e74c3c':'#c0392b'};font-weight:600">
-          ${t.done ? '✓ Done' : isOverdue ? '⚠️ Overdue' : '⏳ Pending'}
-        </td>
+        <td style="padding:7px 8px;color:${statusColor};font-weight:600">${status}</td>
       </tr>`;
     }).join('');
 
@@ -3512,10 +3546,11 @@ function generatePDFReport() {
   const assigneeMap = {};
   filtered.forEach(t => {
     const name = t.assignedTo || 'Unassigned';
-    if (!assigneeMap[name]) assigneeMap[name] = { total:0, done:0, overdue:0 };
+    if (!assigneeMap[name]) assigneeMap[name] = { total:0, done:0, pending:0, upcoming:0 };
     assigneeMap[name].total++;
     if (t.done) assigneeMap[name].done++;
-    if (!t.done && t.date < todayKey) assigneeMap[name].overdue++;
+    else if (t.date <= todayKey) assigneeMap[name].pending++;
+    else assigneeMap[name].upcoming++;
   });
   const assigneeRows = Object.keys(assigneeMap).map(name => {
     const r = assigneeMap[name];
@@ -3524,22 +3559,25 @@ function generatePDFReport() {
       <td style="padding:7px 8px;font-weight:600">${name}</td>
       <td style="padding:7px 8px;text-align:center">${r.total}</td>
       <td style="padding:7px 8px;text-align:center;color:#2ecc71;font-weight:600">${r.done}</td>
-      <td style="padding:7px 8px;text-align:center;color:#c0392b">${r.total-r.done}</td>
-      <td style="padding:7px 8px;text-align:center;color:#e74c3c;font-weight:600">${r.overdue}</td>
+      <td style="padding:7px 8px;text-align:center;color:#e74c3c;font-weight:600">${r.pending}</td>
+      <td style="padding:7px 8px;text-align:center;color:#a29bfe;font-weight:600">${r.upcoming}</td>
       <td style="padding:7px 8px;text-align:center;color:#0984e3;font-weight:700">${rA}%</td>
     </tr>`;
   }).join('');
 
   // ── Platform rows ──
   const platRows = SOCIAL_PLATFORMS.map(p => {
-    const pt = filtered.filter(t => t.category === p.id);
-    const pd = pt.filter(t => t.done).length;
+    const pt       = filtered.filter(t => t.category === p.id);
+    const pd       = pt.filter(t => t.done).length;
+    const ppending = pt.filter(t => !t.done && t.date <= todayKey).length;
+    const pupcoming= pt.filter(t => !t.done && t.date > todayKey).length;
     const pr = pt.length ? Math.round(pd/pt.length*100) : 0;
     return `<tr style="border-bottom:1px solid #eee">
       <td style="padding:7px 8px;font-weight:600">${p.icon} ${p.label}</td>
       <td style="padding:7px 8px;text-align:center">${pt.length}</td>
       <td style="padding:7px 8px;text-align:center;color:#2ecc71;font-weight:600">${pd}</td>
-      <td style="padding:7px 8px;text-align:center;color:#c0392b">${pt.length-pd}</td>
+      <td style="padding:7px 8px;text-align:center;color:#e74c3c;font-weight:600">${ppending}</td>
+      <td style="padding:7px 8px;text-align:center;color:#a29bfe;font-weight:600">${pupcoming}</td>
       <td style="padding:7px 8px;text-align:center;color:#0984e3;font-weight:700">${pr}%</td>
     </tr>`;
   }).join('');
@@ -3596,13 +3634,13 @@ function generatePDFReport() {
 
   <h2>👤 By Assignee</h2>
   ${assigneeRows ? `<table>
-    <thead><tr><th>Assignee</th><th>Total</th><th>Completed</th><th>Pending</th><th>Overdue</th><th>Rate</th></tr></thead>
+    <thead><tr><th>Assignee</th><th>Total</th><th>Completed</th><th>⏳ Pending</th><th>🗓️ Upcoming</th><th>Rate</th></tr></thead>
     <tbody>${assigneeRows}</tbody>
   </table>` : '<div class="no-data">No assignee data for this period.</div>'}
 
   <h2>📱 Platform Breakdown</h2>
   <table>
-    <thead><tr><th>Platform</th><th>Total</th><th>Completed</th><th>Pending</th><th>Rate</th></tr></thead>
+    <thead><tr><th>Platform</th><th>Total</th><th>Completed</th><th>⏳ Pending</th><th>🗓️ Upcoming</th><th>Rate</th></tr></thead>
     <tbody>${platRows}</tbody>
   </table>
 
