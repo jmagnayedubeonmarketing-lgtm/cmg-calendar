@@ -3511,7 +3511,7 @@ function updateReportPreview() {
   `;
 }
 
-function generatePDFReport() {
+async function generatePDFReport() {
   const { from, to } = getReportRange();
   if (!from || !to) { alert('Please select a period first.'); return; }
 
@@ -3527,105 +3527,178 @@ function generatePDFReport() {
   const overdue    = filtered.filter(t => !t.done && t.date < todayKey).length;
   const rate       = filtered.length ? Math.round(done / filtered.length * 100) : 0;
 
-  // ── Task rows ──
-  const taskRows = filtered
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .map(t => {
-      const cat = CATEGORIES.find(c => c.id === t.category) || CATEGORIES[CATEGORIES.length-1];
-      const status = t.done ? '✓ Done' : t.date < todayKey ? '⚠️ Overdue' : t.date === todayKey ? '⏳ Pending' : '🗓️ Upcoming';
-      const statusColor = t.done ? '#2ecc71' : t.date <= todayKey ? '#e74c3c' : '#a29bfe';
-      return `<tr style="border-bottom:1px solid #eee">
-        <td style="padding:7px 8px">${t.title}</td>
-        <td style="padding:7px 8px">${cat.label}</td>
-        <td style="padding:7px 8px">${t.assignedTo || '—'}</td>
-        <td style="padding:7px 8px">${t.date}</td>
-        <td style="padding:7px 8px">${t.priority || 'normal'}</td>
-        <td style="padding:7px 8px;color:${statusColor};font-weight:600">${status}</td>
-      </tr>`;
-    }).join('');
+  // ── Helper: render Chart.js to base64 image ──
+  function renderChartToImage(type, data, options = {}) {
+    return new Promise(resolve => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 900; canvas.height = 380;
+      const ctx = canvas.getContext('2d');
+      const chart = new Chart(ctx, {
+        type, data,
+        options: { responsive: false, animation: false, ...options }
+      });
+      setTimeout(() => { resolve(canvas.toDataURL('image/png')); chart.destroy(); }, 400);
+    });
+  }
 
-  // ── Assignee rows ──
+  const barScales = {
+    x: { stacked: true, ticks: { color: '#555' }, grid: { color: '#eee' } },
+    y: { stacked: true, ticks: { color: '#555' }, grid: { color: '#eee' }, beginAtZero: true }
+  };
+
+  // ── Chart 1: Status Overview (Doughnut) ──
+  const statusChartImg = await renderChartToImage('doughnut',
+    { labels: ['Completed', 'Pending', 'Upcoming'],
+      datasets: [{ data: [done, pending, upcoming],
+        backgroundColor: ['#2ecc71', '#e74c3c', '#a29bfe'],
+        borderColor: '#fff', borderWidth: 3, hoverOffset: 8 }] },
+    { cutout: '60%', plugins: { legend: { display: true, labels: { color: '#333', font: { size: 13 } } } } }
+  );
+
+  // ── Chart 2: By Assignee (Stacked Bar) ──
   const assigneeMap = {};
   filtered.forEach(t => {
     const name = t.assignedTo || 'Unassigned';
-    if (!assigneeMap[name]) assigneeMap[name] = { total:0, done:0, pending:0, upcoming:0 };
-    assigneeMap[name].total++;
+    if (!assigneeMap[name]) assigneeMap[name] = { done: 0, pending: 0, upcoming: 0 };
     if (t.done) assigneeMap[name].done++;
     else if (t.date <= todayKey) assigneeMap[name].pending++;
     else assigneeMap[name].upcoming++;
   });
-  const assigneeRows = Object.keys(assigneeMap).map(name => {
+  const assigneeNames = Object.keys(assigneeMap);
+  const assigneeChartImg = await renderChartToImage('bar',
+    { labels: assigneeNames,
+      datasets: [
+        { label: 'Completed', data: assigneeNames.map(n => assigneeMap[n].done),     backgroundColor: '#2ecc71', borderRadius: 4 },
+        { label: 'Pending',   data: assigneeNames.map(n => assigneeMap[n].pending),  backgroundColor: '#e74c3c', borderRadius: 4 },
+        { label: 'Upcoming',  data: assigneeNames.map(n => assigneeMap[n].upcoming), backgroundColor: '#a29bfe', borderRadius: 4 },
+      ] },
+    { plugins: { legend: { display: true, labels: { color: '#333', font: { size: 12 } } } }, scales: barScales }
+  );
+
+  // ── Chart 3: Platform Breakdown (Bar) ──
+  const platData = SOCIAL_PLATFORMS.map(p => {
+    const pt = filtered.filter(t => t.category === p.id);
+    return { label: p.label, color: p.color,
+      done:     pt.filter(t => t.done).length,
+      pending:  pt.filter(t => !t.done && t.date <= todayKey).length,
+      upcoming: pt.filter(t => !t.done && t.date > todayKey).length };
+  });
+  const platformChartImg = await renderChartToImage('bar',
+    { labels: platData.map(p => p.label),
+      datasets: [
+        { label: 'Completed', data: platData.map(p => p.done),     backgroundColor: platData.map(p => p.color + 'cc'), borderRadius: 4 },
+        { label: 'Pending',   data: platData.map(p => p.pending),  backgroundColor: '#e74c3c88', borderRadius: 4 },
+        { label: 'Upcoming',  data: platData.map(p => p.upcoming), backgroundColor: '#a29bfe88', borderRadius: 4 },
+      ] },
+    { plugins: { legend: { display: true, labels: { color: '#333', font: { size: 12 } } } }, scales: barScales }
+  );
+
+  // ── Chart 4: Completion Trend (Line) ──
+  const dayCur = new Date(from + 'T00:00:00');
+  const dayEnd = new Date(to + 'T23:59:59');
+  const dayArr = [];
+  while (dayCur <= dayEnd) {
+    const key = dateKey(dayCur);
+    const dt = filtered.filter(t => t.date === key);
+    dayArr.push({ label: key, total: dt.length, done: dt.filter(t => t.done).length });
+    dayCur.setDate(dayCur.getDate() + 1);
+  }
+  let tLabels, tTotal, tDone;
+  if (dayArr.length > 30) {
+    const buckets = [];
+    for (let i = 0; i < dayArr.length; i += 7) {
+      const chunk = dayArr.slice(i, i + 7);
+      buckets.push({ label: chunk[0].label, total: chunk.reduce((s,d)=>s+d.total,0), done: chunk.reduce((s,d)=>s+d.done,0) });
+    }
+    tLabels = buckets.map(b => b.label); tTotal = buckets.map(b => b.total); tDone = buckets.map(b => b.done);
+  } else {
+    tLabels = dayArr.map(d => d.label); tTotal = dayArr.map(d => d.total); tDone = dayArr.map(d => d.done);
+  }
+  const trendChartImg = await renderChartToImage('line',
+    { labels: tLabels,
+      datasets: [
+        { label: 'Total Tasks', data: tTotal, borderColor: '#c8a800', backgroundColor: 'rgba(200,168,0,0.08)', tension: 0.4, fill: true, pointRadius: 3, pointBackgroundColor: '#c8a800' },
+        { label: 'Completed',   data: tDone,  borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.08)', tension: 0.4, fill: true, pointRadius: 3, pointBackgroundColor: '#2ecc71' },
+      ] },
+    { plugins: { legend: { display: true, labels: { color: '#333', font: { size: 12 } } } },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxRotation: 45 }, grid: { color: '#eee' } },
+        y: { ticks: { color: '#555' }, grid: { color: '#eee' }, beginAtZero: true }
+      } }
+  );
+
+  // ── Table rows ──
+  const taskRows = filtered.sort((a,b) => a.date.localeCompare(b.date)).map(t => {
+    const cat = CATEGORIES.find(c => c.id === t.category) || CATEGORIES[CATEGORIES.length-1];
+    const status = t.done ? '✓ Done' : t.date < todayKey ? '⚠️ Overdue' : t.date === todayKey ? '⏳ Pending' : '🗓️ Upcoming';
+    const statusColor = t.done ? '#2ecc71' : t.date <= todayKey ? '#e74c3c' : '#a29bfe';
+    return `<tr style="border-bottom:1px solid #eee">
+      <td style="padding:7px 8px">${t.title}</td><td style="padding:7px 8px">${cat.label}</td>
+      <td style="padding:7px 8px">${t.assignedTo || '—'}</td><td style="padding:7px 8px">${t.date}</td>
+      <td style="padding:7px 8px">${t.priority || 'normal'}</td>
+      <td style="padding:7px 8px;color:${statusColor};font-weight:600">${status}</td></tr>`;
+  }).join('');
+
+  const assigneeRows = assigneeNames.map(name => {
     const r = assigneeMap[name];
-    const rA = r.total ? Math.round(r.done/r.total*100) : 0;
+    const total = r.done + r.pending + r.upcoming;
+    const rA = total ? Math.round(r.done/total*100) : 0;
     return `<tr style="border-bottom:1px solid #eee">
       <td style="padding:7px 8px;font-weight:600">${name}</td>
-      <td style="padding:7px 8px;text-align:center">${r.total}</td>
+      <td style="padding:7px 8px;text-align:center">${total}</td>
       <td style="padding:7px 8px;text-align:center;color:#2ecc71;font-weight:600">${r.done}</td>
       <td style="padding:7px 8px;text-align:center;color:#e74c3c;font-weight:600">${r.pending}</td>
       <td style="padding:7px 8px;text-align:center;color:#a29bfe;font-weight:600">${r.upcoming}</td>
-      <td style="padding:7px 8px;text-align:center;color:#0984e3;font-weight:700">${rA}%</td>
-    </tr>`;
+      <td style="padding:7px 8px;text-align:center;color:#0984e3;font-weight:700">${rA}%</td></tr>`;
   }).join('');
 
-  // ── Platform rows ──
   const platRows = SOCIAL_PLATFORMS.map(p => {
-    const pt       = filtered.filter(t => t.category === p.id);
-    const pd       = pt.filter(t => t.done).length;
-    const ppending = pt.filter(t => !t.done && t.date <= todayKey).length;
-    const pupcoming= pt.filter(t => !t.done && t.date > todayKey).length;
+    const pt = filtered.filter(t => t.category === p.id);
+    const pd = pt.filter(t => t.done).length;
+    const pp = pt.filter(t => !t.done && t.date <= todayKey).length;
+    const pu = pt.filter(t => !t.done && t.date > todayKey).length;
     const pr = pt.length ? Math.round(pd/pt.length*100) : 0;
     return `<tr style="border-bottom:1px solid #eee">
       <td style="padding:7px 8px;font-weight:600">${p.icon} ${p.label}</td>
       <td style="padding:7px 8px;text-align:center">${pt.length}</td>
       <td style="padding:7px 8px;text-align:center;color:#2ecc71;font-weight:600">${pd}</td>
-      <td style="padding:7px 8px;text-align:center;color:#e74c3c;font-weight:600">${ppending}</td>
-      <td style="padding:7px 8px;text-align:center;color:#a29bfe;font-weight:600">${pupcoming}</td>
-      <td style="padding:7px 8px;text-align:center;color:#0984e3;font-weight:700">${pr}%</td>
-    </tr>`;
+      <td style="padding:7px 8px;text-align:center;color:#e74c3c;font-weight:600">${pp}</td>
+      <td style="padding:7px 8px;text-align:center;color:#a29bfe;font-weight:600">${pu}</td>
+      <td style="padding:7px 8px;text-align:center;color:#0984e3;font-weight:700">${pr}%</td></tr>`;
   }).join('');
 
-  // ── Overdue rows ──
-  const overdueRows = filtered
-    .filter(t => !t.done && t.date < todayKey)
-    .sort((a,b) => a.date.localeCompare(b.date))
-    .map(t => {
-      const cat = CATEGORIES.find(c => c.id === t.category) || CATEGORIES[CATEGORIES.length-1];
-      const days = Math.floor((new Date(todayKey) - new Date(t.date)) / 86400000);
-      return `<tr style="border-bottom:1px solid #eee">
-        <td style="padding:7px 8px">${t.title}</td>
-        <td style="padding:7px 8px">${t.assignedTo || '—'}</td>
-        <td style="padding:7px 8px">${cat.label}</td>
-        <td style="padding:7px 8px">${t.date}</td>
-        <td style="padding:7px 8px;color:#e74c3c;font-weight:700">${days} day${days!==1?'s':''}</td>
-      </tr>`;
-    }).join('');
+  const overdueRows = filtered.filter(t => !t.done && t.date < todayKey).sort((a,b)=>a.date.localeCompare(b.date)).map(t => {
+    const cat = CATEGORIES.find(c => c.id === t.category) || CATEGORIES[CATEGORIES.length-1];
+    const d2 = Math.floor((new Date(todayKey)-new Date(t.date))/86400000);
+    return `<tr style="border-bottom:1px solid #eee">
+      <td style="padding:7px 8px">${t.title}</td><td style="padding:7px 8px">${t.assignedTo||'—'}</td>
+      <td style="padding:7px 8px">${cat.label}</td><td style="padding:7px 8px">${t.date}</td>
+      <td style="padding:7px 8px;color:#e74c3c;font-weight:700">${d2} day${d2!==1?'s':''}</td></tr>`;
+  }).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <title>CMG ${periodLabel} Report — ${rangeLabel}</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 30px; color: #222; font-size: 13px; }
-    h1 { color: #0a0a0f; margin-bottom: 2px; font-size: 20px; }
-    .badge { display:inline-block; background:#0a0a0f; color:#c8f135; border-radius:4px; padding:2px 10px; font-size:11px; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; margin-left:8px; vertical-align:middle; }
-    .meta { color: #666; font-size: 12px; margin: 6px 0 20px; }
-    .stats { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
-    .stat { background:#f5f5f5; border-radius:8px; padding:10px 16px; text-align:center; min-width:80px; }
-    .stat-val { font-size:22px; font-weight:800; }
-    .stat-label { font-size:10px; color:#888; text-transform:uppercase; }
-    h2 { color:#0a0a0f; font-size:14px; margin:26px 0 8px; border-bottom:2px solid #0a0a0f; padding-bottom:5px; }
-    table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:6px; }
-    thead { background:#0a0a0f; color:white; }
-    thead th { padding:8px; text-align:left; }
-    tbody tr:nth-child(even) { background:#f9f9f9; }
-    .no-data { text-align:center; padding:14px; color:#999; background:#f9f9f9; border-radius:6px; }
-    .no-overdue { text-align:center; padding:14px; color:#2ecc71; font-weight:600; background:#f0fff4; border-radius:6px; }
-    @media print { body { padding:10px; } }
+    body{font-family:Arial,sans-serif;padding:30px;color:#222;font-size:13px}
+    h1{color:#0a0a0f;margin-bottom:2px;font-size:20px}
+    .badge{display:inline-block;background:#0a0a0f;color:#c8f135;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-left:8px;vertical-align:middle}
+    .meta{color:#666;font-size:12px;margin:6px 0 20px}
+    .stats{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+    .stat{background:#f5f5f5;border-radius:8px;padding:10px 16px;text-align:center;min-width:80px}
+    .stat-val{font-size:22px;font-weight:800}.stat-label{font-size:10px;color:#888;text-transform:uppercase}
+    h2{color:#0a0a0f;font-size:14px;margin:28px 0 6px;border-bottom:2px solid #0a0a0f;padding-bottom:5px}
+    table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px}
+    thead{background:#0a0a0f;color:white} thead th{padding:8px;text-align:left}
+    tbody tr:nth-child(even){background:#f9f9f9}
+    .chart-wrap{margin:8px 0 20px;background:#fafafa;border:1px solid #eee;border-radius:8px;padding:10px;text-align:center;page-break-inside:avoid}
+    .chart-wrap img{width:100%;max-width:860px;height:auto}
+    .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px}
+    .no-data{text-align:center;padding:14px;color:#999;background:#f9f9f9;border-radius:6px}
+    .no-overdue{text-align:center;padding:14px;color:#2ecc71;font-weight:600;background:#f0fff4;border-radius:6px}
+    @media print{body{padding:10px}.chart-wrap{page-break-inside:avoid}}
   </style></head><body>
-
   <h1>📋 CMG SocMed Activities & Events Calendar <span class="badge">${periodLabel} Report</span></h1>
-  <div class="meta">
-    Dubeon Corporation &nbsp;·&nbsp; Period: <strong>${from}</strong> to <strong>${to}</strong> &nbsp;·&nbsp; Generated on ${new Date().toLocaleString()}
-  </div>
-
+  <div class="meta">Dubeon Corporation &nbsp;·&nbsp; Period: <strong>${from}</strong> to <strong>${to}</strong> &nbsp;·&nbsp; Generated on ${new Date().toLocaleString()}</div>
   <div class="stats">
     <div class="stat"><div class="stat-val">${filtered.length}</div><div class="stat-label">Total Tasks</div></div>
     <div class="stat"><div class="stat-val" style="color:#2ecc71">${done}</div><div class="stat-label">Completed</div></div>
@@ -3634,41 +3707,30 @@ function generatePDFReport() {
     <div class="stat"><div class="stat-val" style="color:#ff6b6b">${overdue}</div><div class="stat-label">Overdue</div></div>
     <div class="stat"><div class="stat-val" style="color:#0984e3">${rate}%</div><div class="stat-label">Completion Rate</div></div>
   </div>
-
+  <div class="charts-row">
+    <div><h2 style="margin-top:0">📊 Status Overview</h2><div class="chart-wrap"><img src="${statusChartImg}" /></div></div>
+    <div><h2 style="margin-top:0">📈 Completion Trend</h2><div class="chart-wrap"><img src="${trendChartImg}" /></div></div>
+  </div>
   <h2>👤 By Assignee</h2>
-  ${assigneeRows ? `<table>
-    <thead><tr><th>Assignee</th><th>Total</th><th>Completed</th><th>⏳ Pending</th><th>🗓️ Upcoming</th><th>Rate</th></tr></thead>
-    <tbody>${assigneeRows}</tbody>
-  </table>` : '<div class="no-data">No assignee data for this period.</div>'}
-
+  <div class="chart-wrap"><img src="${assigneeChartImg}" /></div>
+  ${assigneeRows ? `<table><thead><tr><th>Assignee</th><th>Total</th><th>Completed</th><th>⏳ Pending</th><th>🗓️ Upcoming</th><th>Rate</th></tr></thead><tbody>${assigneeRows}</tbody></table>` : '<div class="no-data">No assignee data.</div>'}
   <h2>📱 Platform Breakdown</h2>
-  <table>
-    <thead><tr><th>Platform</th><th>Total</th><th>Completed</th><th>⏳ Pending</th><th>🗓️ Upcoming</th><th>Rate</th></tr></thead>
-    <tbody>${platRows}</tbody>
-  </table>
-
+  <div class="chart-wrap"><img src="${platformChartImg}" /></div>
+  <table><thead><tr><th>Platform</th><th>Total</th><th>Completed</th><th>⏳ Pending</th><th>🗓️ Upcoming</th><th>Rate</th></tr></thead><tbody>${platRows}</tbody></table>
   <h2>⚠️ Overdue Tasks</h2>
-  ${overdueRows ? `<table>
-    <thead><tr><th>Title</th><th>Assigned To</th><th>Category</th><th>Due Date</th><th>Days Overdue</th></tr></thead>
-    <tbody>${overdueRows}</tbody>
-  </table>` : '<div class="no-overdue">🎉 No overdue tasks in this period!</div>'}
-
+  ${overdueRows ? `<table><thead><tr><th>Title</th><th>Assigned To</th><th>Category</th><th>Due Date</th><th>Days Overdue</th></tr></thead><tbody>${overdueRows}</tbody></table>` : '<div class="no-overdue">🎉 No overdue tasks in this period!</div>'}
   <h2>📋 All Tasks in Period</h2>
-  ${taskRows ? `<table>
-    <thead><tr><th>Title</th><th>Category</th><th>Assigned To</th><th>Date</th><th>Priority</th><th>Status</th></tr></thead>
-    <tbody>${taskRows}</tbody>
-  </table>` : '<div class="no-data">No tasks found for this period.</div>'}
-
+  ${taskRows ? `<table><thead><tr><th>Title</th><th>Category</th><th>Assigned To</th><th>Date</th><th>Priority</th><th>Status</th></tr></thead><tbody>${taskRows}</tbody></table>` : '<div class="no-data">No tasks found.</div>'}
   </body></html>`;
 
   const win = window.open('', '_blank');
   win.document.write(html);
   win.document.close();
-  setTimeout(() => win.print(), 500);
+  setTimeout(() => win.print(), 800);
   closeReportModal();
 }
 
-window.openReportModal    = openReportModal;
+window.openReportModalwindow.openReportModal    = openReportModal;
 window.closeReportModal   = closeReportModal;
 window.selectReportPeriod = selectReportPeriod;
 window.updateReportPreview = updateReportPreview;
