@@ -2095,6 +2095,8 @@
       <label class="form-label">Category</label>
       <div class="cat-selector" id="tt_catSelector"></div>
     </div>
+    <!-- Dynamic sub-fields per category -->
+    <div id="tt_subFieldsWrap" style="display:none"></div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Date</label>
@@ -2164,6 +2166,11 @@
           <div><div class="detail-section-title">Created By</div><div id="tt_tdCreatedBy" style="font-size:0.82rem;color:var(--text-dim)">—</div></div>
           <div><div class="detail-section-title">Assigned To</div><div id="tt_tdAssignedTo" style="font-size:0.82rem;color:var(--text-dim)">—</div></div>
         </div>
+      </div>
+      <!-- Sub-fields (e.g. Company Name, Quotation Number, Amount) -->
+      <div class="detail-section" id="tt_tdSubFieldsSection" style="display:none">
+        <div class="detail-section-title">📑 Details</div>
+        <div id="tt_tdSubFields"></div>
       </div>
       <div class="detail-section" id="tt_tdNotesSection">
         <div class="detail-section-title">Notes</div>
@@ -5525,10 +5532,138 @@ function switchAppTab(tab) {
 // Uses Firestore collection: 'tasks_tracking'
 // ═══════════════════════════════════════════════════════
 
+// ── CMG TASK TRACKING CATEGORIES ──
+const TT_CATEGORIES = [
+  {
+    id: 'emailer',
+    label: 'Emailer Campaign',
+    color: '#48dbfb',
+    icon: '📧',
+    subFields: []
+  },
+  {
+    id: 'marketing_materials',
+    label: 'Marketing Materials Generation',
+    color: '#a29bfe',
+    icon: '🎨',
+    subFields: []
+  },
+  {
+    id: 'printing',
+    label: 'Printing',
+    color: '#fd79a8',
+    icon: '🖨️',
+    subFields: []
+  },
+  {
+    id: 'website_update',
+    label: 'Website Update',
+    color: '#74b9ff',
+    icon: '🌐',
+    hasChildren: true,
+    subFields: [],
+    children: [
+      { id: 'website_dubeon',  label: 'Dubeon',  color: '#0984e3', icon: '🔵' },
+      { id: 'website_brilumd', label: 'Brilumd', color: '#6c5ce7', icon: '🟣' },
+    ]
+  },
+  {
+    id: 'ecommerce_update',
+    label: 'E-commerce Update',
+    color: '#00b894',
+    icon: '🛒',
+    hasChildren: true,
+    subFields: [],
+    children: [
+      { id: 'ecommerce_dbstore', label: 'DB Store', color: '#00cec9', icon: '🏪' },
+      { id: 'ecommerce_brilumd', label: 'Brilumd',  color: '#55efc4', icon: '🟢' },
+    ]
+  },
+  {
+    id: 'ppt_request',
+    label: 'PPT Request',
+    color: '#e17055',
+    icon: '📊',
+    subFields: []
+  },
+  {
+    id: 'datasheet',
+    label: 'Datasheet Generation',
+    color: '#fdcb6e',
+    icon: '📄',
+    subFields: []
+  },
+  {
+    id: 'rfq_assist',
+    label: 'RFQ Assist',
+    color: '#b2bec3',
+    icon: '📋',
+    subFields: []
+  },
+  {
+    id: 'quotation',
+    label: 'Quotation Generation',
+    color: '#c8f135',
+    icon: '💰',
+    subFields: [
+      { key: 'companyName',     label: 'Company Name',      type: 'text',   placeholder: 'Enter company name' },
+      { key: 'quotationNumber', label: 'Quotation Number',  type: 'text',   placeholder: 'e.g. Q-2026-001' },
+      { key: 'amount',          label: 'Amount',            type: 'text',   placeholder: 'e.g. ₱50,000.00' },
+    ],
+    hasChildren: true,
+    children: [
+      { id: 'quotation_socmed',   label: 'Social Media Inquiry', color: '#c8f135', icon: '📱' },
+      { id: 'quotation_website',  label: 'Website Inquiry',      color: '#a8d800', icon: '🌐' },
+    ]
+  },
+  {
+    id: 'follow_up',
+    label: 'Follow Up Proposals',
+    color: '#ff9f43',
+    icon: '📨',
+    subFields: [
+      { key: 'companyName',     label: 'Company Name',      type: 'text',   placeholder: 'Enter company name' },
+      { key: 'quotationNumber', label: 'Quotation Number',  type: 'text',   placeholder: 'e.g. Q-2026-001' },
+      { key: 'amount',          label: 'Amount',            type: 'text',   placeholder: 'e.g. ₱50,000.00' },
+      { key: 'dateOfProposal',  label: 'Date of Proposal',  type: 'date',   placeholder: '' },
+    ]
+  },
+];
+
+// Flat list of all TT category IDs (including children)
+function tt_getAllCatIds() {
+  const ids = [];
+  TT_CATEGORIES.forEach(c => {
+    ids.push(c.id);
+    if (c.children) c.children.forEach(ch => ids.push(ch.id));
+  });
+  return ids;
+}
+
+// Find a TT category by id (searches top-level and children)
+function tt_findCat(id) {
+  for (const c of TT_CATEGORIES) {
+    if (c.id === id) return c;
+    if (c.children) {
+      const ch = c.children.find(x => x.id === id);
+      if (ch) return { ...ch, subFields: c.subFields || [] };
+    }
+  }
+  return TT_CATEGORIES[TT_CATEGORIES.length - 1];
+}
+
+// Find the parent category of a child id
+function tt_findParentCat(id) {
+  for (const c of TT_CATEGORIES) {
+    if (c.children && c.children.find(x => x.id === id)) return c;
+  }
+  return null;
+}
+
 let tt_tasks = [];
 let tt_currentDate = new Date();
 let tt_selectedDate = null;
-let tt_selectedCat = 'social';
+let tt_selectedCat = 'emailer';
 let tt_editingTaskId = null;
 let tt_currentView = 'month';
 let tt_weekOffset = 0;
@@ -5580,7 +5715,7 @@ function tt_renderCalendar() {
 }
 
 function tt_getCatColor(catId) {
-  const c = CATEGORIES.find(x => x.id === catId);
+  const c = tt_findCat(catId);
   return c ? c.color : '#c8f135';
 }
 
@@ -5641,7 +5776,7 @@ function tt_makeDayCell(key, dayNum, otherMonth) {
   const dayTasks = tt_tasks.filter(t => t.date === key);
   const maxShow = 3;
   dayTasks.slice(0, maxShow).forEach(t => {
-    const cat = CATEGORIES.find(c => c.id === t.category) || CATEGORIES[CATEGORIES.length - 1];
+    const cat = tt_findCat(t.category);
     const chip = document.createElement('div');
     chip.className = 'task-chip' + (t.done ? ' done' : '');
     chip.style.background = cat.color;
@@ -5699,7 +5834,7 @@ function tt_renderPanel() {
   }
   tasksEl.innerHTML = '';
   dayTasks.forEach(t => {
-    const cat = CATEGORIES.find(c => c.id === t.category) || CATEGORIES[CATEGORIES.length - 1];
+    const cat = tt_findCat(t.category);
     const item = document.createElement('div');
     item.className = 'task-item' + (t.done ? ' done' : '');
     item.style.setProperty('--cat-color', cat.color);
@@ -5747,7 +5882,7 @@ function tt_renderMobDayPanel(key) {
   }
   container.innerHTML = '';
   dayTasks.forEach(t => {
-    const cat = CATEGORIES.find(c => c.id === t.category) || CATEGORIES[CATEGORIES.length - 1];
+    const cat = tt_findCat(t.category);
     const item = document.createElement('div');
     item.className = 'agenda-task';
     item.innerHTML = `
@@ -5809,18 +5944,21 @@ function tt_renderCategories() {
   const mt = tt_tasks.filter(t => { const d = new Date(t.date); return d.getFullYear()===year && d.getMonth()===month; });
   const label = tt_currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
   const el = document.getElementById('tt_catMonthLabel'); if (el) el.textContent = `— ${label}`;
-  TOP_CATS.forEach(cat => {
-    const count = cat.isSocialParent ? mt.filter(t => SOCIAL_PLATFORMS.some(p => p.id === t.category)).length : mt.filter(t => t.category === cat.id).length;
+
+  TT_CATEGORIES.forEach(cat => {
+    // Count includes children
+    const childIds = cat.children ? cat.children.map(c => c.id) : [];
+    const count = mt.filter(t => t.category === cat.id || childIds.includes(t.category)).length;
     const item = document.createElement('div'); item.className = 'cat-item';
-    item.innerHTML = `<div class="cat-dot" style="background:${cat.color};box-shadow:0 0 6px ${cat.color}60"></div><span class="cat-name">${cat.icon||''}${cat.label}</span><span class="cat-count">${count}</span>`;
+    item.innerHTML = `<div class="cat-dot" style="background:${cat.color};box-shadow:0 0 6px ${cat.color}60"></div><span class="cat-name">${cat.icon||''} ${cat.label}</span><span class="cat-count">${count}</span>`;
     item.onclick = () => tt_openCatModal(cat.id);
     container.appendChild(item);
-    if (cat.isSocialParent) {
-      SOCIAL_PLATFORMS.forEach(p => {
-        const pCount = mt.filter(t => t.category === p.id).length;
+    if (cat.children) {
+      cat.children.forEach(ch => {
+        const chCount = mt.filter(t => t.category === ch.id).length;
         const sub = document.createElement('div'); sub.className = 'cat-sub-item';
-        sub.innerHTML = `<span style="font-size:0.9rem">${p.icon}</span><span style="color:${p.color};flex:1">${p.label}</span><span class="cat-count">${pCount}</span>`;
-        sub.onclick = () => tt_openCatModal(p.id);
+        sub.innerHTML = `<span style="font-size:0.9rem">${ch.icon||'•'}</span><span style="color:${ch.color};flex:1">${ch.label}</span><span class="cat-count">${chCount}</span>`;
+        sub.onclick = () => tt_openCatModal(ch.id);
         container.appendChild(sub);
       });
     }
@@ -5834,19 +5972,37 @@ function tt_renderCatFilterBar() {
   bar._activeCat = null;
   bar.innerHTML = '';
   const allBtn = document.createElement('button');
-  allBtn.className = 'cat-filter-btn active'; allBtn.style.background = 'var(--accent)'; allBtn.style.color = '#0a0a0f'; allBtn.style.borderColor = 'var(--accent)';
+  allBtn.className = 'cat-filter-btn active';
+  allBtn.style.cssText = 'background:var(--accent);color:#0a0a0f;border-color:var(--accent)';
   allBtn.textContent = '+ All';
-  allBtn.onclick = () => { bar._activeCat = null; bar.querySelectorAll('.cat-filter-btn').forEach(b => { b.classList.remove('active'); b.style.background=''; b.style.color=''; b.style.borderColor=''; }); allBtn.classList.add('active'); allBtn.style.background='var(--accent)'; allBtn.style.color='#0a0a0f'; allBtn.style.borderColor='var(--accent)'; tt_renderMonthView(); };
+  allBtn.onclick = () => {
+    bar._activeCat = null;
+    bar.querySelectorAll('.cat-filter-btn').forEach(b => { b.classList.remove('active'); b.style.background=''; b.style.color=''; b.style.borderColor=''; });
+    allBtn.classList.add('active'); allBtn.style.background='var(--accent)'; allBtn.style.color='#0a0a0f'; allBtn.style.borderColor='var(--accent)';
+    tt_renderMonthView();
+  };
   bar.appendChild(allBtn);
-  [...TOP_CATS, ...SOCIAL_PLATFORMS.map(p => ({...p, parentId:'social'}))].forEach(cat => {
-    if (cat.isSocialParent) return;
-    const btn = document.createElement('button'); btn.className = 'cat-filter-btn'; btn.style.borderColor = cat.color; btn.style.color = cat.color;
-    btn.innerHTML = (cat.icon ? `<span>${cat.icon}</span> ` : '') + (cat.label||cat.id);
-    btn.onclick = () => {
-      bar._activeCat = cat.id; bar.querySelectorAll('.cat-filter-btn').forEach(b => { b.classList.remove('active'); b.style.background=''; b.style.color=cat.color||''; }); allBtn.style.background=''; allBtn.style.color=''; allBtn.style.borderColor='';
-      btn.classList.add('active'); btn.style.background = cat.color; btn.style.color = '#0a0a0f'; tt_renderMonthView();
+
+  // Add a button per top-level + child category
+  TT_CATEGORIES.forEach(cat => {
+    const addBtn = (id, label, icon, color) => {
+      const btn = document.createElement('button');
+      btn.className = 'cat-filter-btn';
+      btn.style.borderColor = color; btn.style.color = color;
+      btn.innerHTML = (icon ? `<span>${icon}</span> ` : '') + label;
+      btn.onclick = () => {
+        bar._activeCat = id;
+        bar.querySelectorAll('.cat-filter-btn').forEach(b => { b.classList.remove('active'); b.style.background=''; b.style.color=color; });
+        allBtn.style.background=''; allBtn.style.color=''; allBtn.style.borderColor='';
+        btn.classList.add('active'); btn.style.background = color; btn.style.color = '#0a0a0f';
+        tt_renderMonthView();
+      };
+      bar.appendChild(btn);
     };
-    bar.appendChild(btn);
+    addBtn(cat.id, cat.label, cat.icon, cat.color);
+    if (cat.children) {
+      cat.children.forEach(ch => addBtn(ch.id, ch.label, ch.icon, ch.color));
+    }
   });
 }
 
@@ -5872,7 +6028,7 @@ function tt_renderWeekView() {
       const key = dateKey(d);
       const cell = document.createElement('div'); cell.className='week-cell'+(key===today()?' today-col':''); cell.onclick=()=>tt_selectDay(key);
       const slotTasks = tt_tasks.filter(t => t.date===key && t.time && parseInt(t.time.split(':')[0])===h);
-      slotTasks.forEach(t => { const cat=CATEGORIES.find(c=>c.id===t.category)||CATEGORIES[CATEGORIES.length-1]; const chip=document.createElement('div'); chip.style.cssText=`background:${cat.color};color:#0a0a0f;font-size:0.6rem;padding:2px 5px;border-radius:3px;margin-bottom:2px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis`; chip.textContent=t.title; chip.onclick=(e)=>{e.stopPropagation();tt_openTaskDetail(t._id);}; cell.appendChild(chip); });
+      slotTasks.forEach(t => { const cat=tt_findCat(t.category); const chip=document.createElement('div'); chip.style.cssText=`background:${cat.color};color:#0a0a0f;font-size:0.6rem;padding:2px 5px;border-radius:3px;margin-bottom:2px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis`; chip.textContent=t.title; chip.onclick=(e)=>{e.stopPropagation();tt_openTaskDetail(t._id);}; cell.appendChild(chip); });
       grid.appendChild(cell);
     });
   });
@@ -5897,7 +6053,7 @@ function tt_renderAgendaView() {
     const section = document.createElement('div'); section.className='agenda-day';
     section.innerHTML=`<div class="agenda-day-header"><div class="agenda-day-label${isToday?' today-label':''}">${d.toLocaleString('default',{weekday:'long',month:'long',day:'numeric'})}</div>${isToday?'<span class="task-tag" style="background:rgba(200,241,53,0.15);color:var(--accent)">TODAY</span>':''}<div class="agenda-day-line"></div><span class="agenda-day-sub">${grouped[date].length} task${grouped[date].length!==1?'s':''}</span></div>`;
     grouped[date].forEach(t => {
-      const cat=CATEGORIES.find(c=>c.id===t.category)||CATEGORIES[CATEGORIES.length-1];
+      const cat=tt_findCat(t.category);
       const row=document.createElement('div'); row.className='agenda-task';
       row.innerHTML=`<div class="agenda-task-bar" style="background:${cat.color}"></div><div class="agenda-task-content"><div class="agenda-task-title">${t.title}</div><div class="agenda-task-meta"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span>${t.time?`<span class="task-time">⏰ ${t.time}</span>`:''} ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.15);color:#2ecc71">✓ DONE</span>`:`<span class="task-tag" style="background:rgba(192,57,43,0.12);color:#e74c3c">⏳ PENDING</span>`}${t.priority==='high'?`<span class="task-tag" style="background:#ff6b6b20;color:#ff6b6b">HIGH</span>`:''}</div></div>`;
       row.onclick=()=>tt_openTaskDetail(t._id);
@@ -5924,20 +6080,94 @@ function tt_buildCatSelector() {
   const container = document.getElementById('tt_catSelector');
   if (!container) return;
   container.innerHTML = '';
-  TOP_CATS.forEach(cat => {
-    const isActive = cat.isSocialParent ? SOCIAL_PLATFORMS.some(p=>p.id===tt_selectedCat) : tt_selectedCat===cat.id;
-    const btn = document.createElement('button'); btn.className='cat-btn'+(isActive?' active':'');
-    if (isActive) { const ac=cat.isSocialParent?(SOCIAL_PLATFORMS.find(p=>p.id===tt_selectedCat)||cat):cat; btn.style.borderColor=ac.color; btn.style.background=ac.color; }
-    btn.innerHTML=(cat.icon?`<span>${cat.icon}</span>`:'')+cat.label;
-    btn.onclick=()=>{ tt_selectedCat=cat.isSocialParent?'facebook':cat.id; tt_buildCatSelector(); };
+
+  TT_CATEGORIES.forEach(cat => {
+    // Determine if this cat or any child is selected
+    const childIds = cat.children ? cat.children.map(c => c.id) : [];
+    const isActive = tt_selectedCat === cat.id || childIds.includes(tt_selectedCat);
+    const activeCat = isActive ? tt_findCat(tt_selectedCat) : null;
+
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (isActive && !childIds.includes(tt_selectedCat) ? ' active' : (isActive ? ' active' : ''));
+    if (isActive) { btn.style.borderColor = activeCat.color; btn.style.background = activeCat.color; btn.style.color = '#0a0a0f'; }
+    btn.innerHTML = `${cat.icon||''} ${cat.label}`;
+    btn.onclick = () => {
+      tt_selectedCat = cat.children ? cat.children[0].id : cat.id;
+      tt_buildCatSelector();
+      tt_updateSubFields();
+    };
     container.appendChild(btn);
   });
-  if (SOCIAL_PLATFORMS.some(p=>p.id===tt_selectedCat)) {
-    const lbl=document.createElement('div'); lbl.className='social-sub-label'; lbl.textContent='Choose Platform'; container.appendChild(lbl);
-    const grid=document.createElement('div'); grid.className='platform-selector';
-    SOCIAL_PLATFORMS.forEach(p=>{ const btn=document.createElement('button'); btn.className='platform-btn'+(tt_selectedCat===p.id?' active':''); btn.style.color=p.color; if(tt_selectedCat===p.id)btn.style.borderColor=p.color; btn.innerHTML=`<span class="platform-icon">${p.icon}</span><span class="platform-name">${p.label}</span>`; btn.onclick=()=>{tt_selectedCat=p.id;tt_buildCatSelector();}; grid.appendChild(btn); });
+
+  // If selected cat has children, show child picker
+  const parentCat = tt_findParentCat(tt_selectedCat);
+  if (parentCat && parentCat.children) {
+    const subLabel = document.createElement('div');
+    subLabel.className = 'social-sub-label';
+    subLabel.textContent = `Choose ${parentCat.label} Type`;
+    container.appendChild(subLabel);
+
+    const grid = document.createElement('div');
+    grid.className = 'platform-selector';
+    parentCat.children.forEach(ch => {
+      const btn = document.createElement('button');
+      btn.className = 'platform-btn' + (tt_selectedCat === ch.id ? ' active' : '');
+      btn.style.color = ch.color;
+      if (tt_selectedCat === ch.id) btn.style.borderColor = ch.color;
+      btn.innerHTML = `<span class="platform-icon">${ch.icon||'•'}</span><span class="platform-name">${ch.label}</span>`;
+      btn.onclick = () => { tt_selectedCat = ch.id; tt_buildCatSelector(); tt_updateSubFields(); };
+      grid.appendChild(btn);
+    });
     container.appendChild(grid);
   }
+}
+
+// Show/hide dynamic sub-fields based on selected category
+function tt_updateSubFields() {
+  const wrap = document.getElementById('tt_subFieldsWrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  // Find subFields from parent cat (subFields live on parent, even for children)
+  const cat = tt_findCat(tt_selectedCat);
+  const parentCat = tt_findParentCat(tt_selectedCat) || cat;
+  const subFields = parentCat.subFields || cat.subFields || [];
+
+  if (!subFields.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  subFields.forEach(f => {
+    const group = document.createElement('div'); group.className = 'form-group';
+    group.innerHTML = `<label class="form-label">${f.label}</label>` +
+      (f.type === 'date'
+        ? `<input class="form-input" type="date" id="tt_sf_${f.key}" />`
+        : `<input class="form-input" type="text" id="tt_sf_${f.key}" placeholder="${f.placeholder||''}" />`);
+    wrap.appendChild(group);
+  });
+}
+
+// Collect sub-field values
+function tt_collectSubFields() {
+  const cat = tt_findCat(tt_selectedCat);
+  const parentCat = tt_findParentCat(tt_selectedCat) || cat;
+  const subFields = parentCat.subFields || cat.subFields || [];
+  const data = {};
+  subFields.forEach(f => {
+    const el = document.getElementById(`tt_sf_${f.key}`);
+    if (el) data[f.key] = el.value;
+  });
+  return data;
+}
+
+// Populate sub-fields when editing
+function tt_populateSubFields(task) {
+  const cat = tt_findCat(task.category);
+  const parentCat = tt_findParentCat(task.category) || cat;
+  const subFields = parentCat.subFields || cat.subFields || [];
+  subFields.forEach(f => {
+    const el = document.getElementById(`tt_sf_${f.key}`);
+    if (el && task[f.key]) el.value = task[f.key];
+  });
 }
 
 function tt_openEditModal(taskId) {
@@ -5953,7 +6183,12 @@ function tt_openEditModal(taskId) {
   document.getElementById('tt_taskPriority').value = t.priority || 'normal';
   document.getElementById('tt_taskApproval').value  = t.approval || '';
   if (document.getElementById('tt_taskAssignee')) document.getElementById('tt_taskAssignee').value = t.assignedTo || '';
-  tt_selectedCat = t.category; tt_buildCatSelector();
+  // Set category — default to emailer if unknown
+  tt_selectedCat = tt_getAllCatIds().includes(t.category) ? t.category : 'emailer';
+  tt_buildCatSelector();
+  tt_updateSubFields();
+  // Populate sub-fields after they're rendered
+  setTimeout(() => tt_populateSubFields(t), 50);
   document.getElementById('tt_modalOverlay').classList.add('open');
 }
 
@@ -5977,7 +6212,7 @@ function tt_openStatModal(type) {
   else {
     body.innerHTML = '';
     filtered.forEach(t => {
-      const cat=CATEGORIES.find(c=>c.id===t.category)||CATEGORIES[CATEGORIES.length-1];
+      const cat=tt_findCat(t.category);
       const dateStr=new Date(t.date+'T12:00:00').toLocaleString('default',{month:'short',day:'numeric',year:'numeric'});
       const item=document.createElement('div'); item.className='stat-task-item'+(t.done?' done':'');
       item.innerHTML=`<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${cat.color};border-radius:3px 0 0 3px"></div><div class="stat-task-row"><div class="stat-task-title">${t.title}</div><div class="stat-task-date">📅 ${dateStr}</div></div><div class="stat-task-meta"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span>${t.time?`<span class="task-time">⏰ ${t.time}</span>`:''} ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.12);color:#2ecc71">✓ Done</span>`:''}</div>`;
@@ -5992,20 +6227,31 @@ window.tt_openStatModal = tt_openStatModal;
 window.tt_closeStatModal = tt_closeStatModal;
 
 function tt_openCatModal(catId) {
-  let filtered, label, icon, color;
-  if (catId === 'social') {
-    filtered = tt_tasks.filter(t => SOCIAL_PLATFORMS.some(p => p.id === t.category));
-    label='Social Media'; icon='📱'; color='#ff9f43';
+  const cat = tt_findCat(catId);
+  const parentCat = tt_findParentCat(catId);
+  const childIds = cat.children ? cat.children.map(c => c.id) : [];
+  const filtered = tt_tasks.filter(t => t.category === catId || childIds.includes(t.category)).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const label = parentCat ? `${parentCat.label} › ${cat.label}` : cat.label;
+  const icon = cat.icon || '📋'; const color = cat.color || '#c8f135';
+  document.getElementById('tt_statModalIcon').textContent = icon;
+  document.getElementById('tt_statModalTitle').textContent = label;
+  document.getElementById('tt_statModalBadge').textContent = filtered.length;
+  document.getElementById('tt_statModalBadge').style.background = color + '20';
+  document.getElementById('tt_statModalBadge').style.color = color;
+  const body = document.getElementById('tt_statModalBody');
+  if (!filtered.length) {
+    body.innerHTML = `<div class="stat-empty"><div class="e-icon">${icon}</div><p>No tasks in <strong>${label}</strong> yet.</p></div>`;
   } else {
-    const cat=CATEGORIES.find(c=>c.id===catId);
-    filtered=tt_tasks.filter(t=>t.category===catId); label=cat?.label||catId; icon=cat?.icon||'📋'; color=cat?.color||'#c8f135';
+    body.innerHTML = '';
+    filtered.forEach(t => {
+      const tCat = tt_findCat(t.category);
+      const dateStr = new Date(t.date+'T12:00:00').toLocaleString('default',{month:'short',day:'numeric',year:'numeric'});
+      const item = document.createElement('div'); item.className = 'stat-task-item'+(t.done?' done':'');
+      item.innerHTML = `<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${tCat.color};border-radius:3px 0 0 3px"></div><div class="stat-task-row"><div class="stat-task-title">${t.title}</div><div class="stat-task-date">📅 ${dateStr}</div></div><div class="stat-task-meta"><span class="task-tag" style="background:${tCat.color}20;color:${tCat.color}">${tCat.icon||''}${tCat.label}</span>${t.time?`<span class="task-time">⏰ ${t.time}</span>`:''} ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.12);color:#2ecc71">✓ Done</span>`:`<span class="task-tag" style="background:rgba(192,57,43,0.12);color:#e74c3c">⏳ Pending</span>`}</div>`;
+      item.onclick = () => { tt_closeStatModal(); tt_selectDay(t.date); };
+      body.appendChild(item);
+    });
   }
-  filtered=filtered.slice().sort((a,b)=>a.date.localeCompare(b.date));
-  document.getElementById('tt_statModalIcon').textContent=icon; document.getElementById('tt_statModalTitle').textContent=label;
-  document.getElementById('tt_statModalBadge').textContent=filtered.length; document.getElementById('tt_statModalBadge').style.background=color+'20'; document.getElementById('tt_statModalBadge').style.color=color;
-  const body=document.getElementById('tt_statModalBody');
-  if(!filtered.length){body.innerHTML=`<div class="stat-empty"><div class="e-icon">${icon}</div><p>No tasks yet.</p></div>`;}
-  else{body.innerHTML='';filtered.forEach(t=>{const cat=CATEGORIES.find(c=>c.id===t.category)||CATEGORIES[CATEGORIES.length-1];const dateStr=new Date(t.date+'T12:00:00').toLocaleString('default',{month:'short',day:'numeric',year:'numeric'});const item=document.createElement('div');item.className='stat-task-item'+(t.done?' done':'');item.innerHTML=`<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${cat.color};border-radius:3px 0 0 3px"></div><div class="stat-task-row"><div class="stat-task-title">${t.title}</div><div class="stat-task-date">📅 ${dateStr}</div></div><div class="stat-task-meta"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span></div>`;item.onclick=()=>{tt_closeStatModal();tt_selectDay(t.date);};body.appendChild(item);});}
   document.getElementById('tt_statModalOverlay').classList.add('open');
 }
 window.tt_openCatModal = tt_openCatModal;
@@ -6015,11 +6261,30 @@ function tt_openTaskDetail(taskId) {
   const t = tt_tasks.find(x => x._id === taskId); if (!t) return;
   tt_currentDetailTask = t;
   document.getElementById('tt_tdTitle').textContent = t.title;
-  const cat = CATEGORIES.find(c=>c.id===t.category)||CATEGORIES[CATEGORIES.length-1];
+  const cat = tt_findCat(t.category);
+  const parentCat = tt_findParentCat(t.category);
+  const catLabel = parentCat ? `${parentCat.label} › ${cat.label}` : cat.label;
   const dateStr=new Date(t.date+'T12:00:00').toLocaleString('default',{month:'long',day:'numeric',year:'numeric'});
-  document.getElementById('tt_tdMeta').innerHTML=`<span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span><span class="task-tag" style="background:var(--surface2);color:var(--text-dim)">📅 ${dateStr}</span>${t.time?`<span class="task-tag" style="background:var(--surface2);color:var(--text-dim)">⏰ ${t.time}</span>`:''} ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.15);color:#2ecc71">✓ DONE</span>`:`<span class="task-tag" style="background:rgba(192,57,43,0.12);color:#e74c3c">⏳ PENDING</span>`}`;
+  document.getElementById('tt_tdMeta').innerHTML=`<span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${catLabel}</span><span class="task-tag" style="background:var(--surface2);color:var(--text-dim)">📅 ${dateStr}</span>${t.time?`<span class="task-tag" style="background:var(--surface2);color:var(--text-dim)">⏰ ${t.time}</span>`:''} ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.15);color:#2ecc71">✓ DONE</span>`:`<span class="task-tag" style="background:rgba(192,57,43,0.12);color:#e74c3c">⏳ PENDING</span>`}`;
   document.getElementById('tt_tdCreatedBy').textContent = t.createdByName || t.createdBy || '—';
   document.getElementById('tt_tdAssignedTo').textContent = t.assignedTo || '— Unassigned —';
+
+  // Sub-fields (Quotation Number, Amount, etc.)
+  const activeCat = parentCat || cat;
+  const subFields = activeCat.subFields || [];
+  let subFieldsHTML = '';
+  subFields.forEach(f => {
+    if (t[f.key]) {
+      subFieldsHTML += `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);min-width:120px">${f.label}</span>
+        <span style="font-size:0.82rem;color:var(--text-dim);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px">${t[f.key]}</span>
+      </div>`;
+    }
+  });
+  const sfSection = document.getElementById('tt_tdSubFieldsSection');
+  const sfContent = document.getElementById('tt_tdSubFields');
+  if (sfSection && sfContent) { sfContent.innerHTML = subFieldsHTML; sfSection.style.display = subFieldsHTML ? '' : 'none'; }
+
   const notesSection = document.getElementById('tt_tdNotesSection');
   const notesEl = document.getElementById('tt_tdNotes');
   if (t.notes) { notesSection.style.display=''; notesEl.textContent=t.notes; } else { notesSection.style.display='none'; }
@@ -6047,7 +6312,6 @@ function tt_openTaskDetail(taskId) {
     item.innerHTML=`<span class="activity-icon">📌</span><span>${a.text}</span><span class="activity-time">${new Date(a.time).toLocaleString()}</span>`;
     actEl.appendChild(item);
   });
-  document.getElementById('tt_taskDetailOverlay') && null; // uses tt_ overlay
   document.getElementById('tt_taskDetailOverlay').classList.add('open');
 }
 function tt_closeTaskDetail() { document.getElementById('tt_taskDetailOverlay').classList.remove('open'); tt_currentDetailTask=null; }
@@ -6167,7 +6431,7 @@ window.tt_switchATab=tt_switchATab;
 
 function tt_renderCategoryChart() {
   if(tt_chartCategory)tt_chartCategory.destroy();
-  const data=TOP_CATS.map(cat=>{const count=cat.isSocialParent?tt_tasks.filter(t=>SOCIAL_PLATFORMS.some(p=>p.id===t.category)).length:tt_tasks.filter(t=>t.category===cat.id).length;return{label:cat.label,count,color:cat.color};});
+  const data=TT_CATEGORIES.map(cat=>{const childIds=(cat.children||[]).map(c=>c.id);const count=tt_tasks.filter(t=>t.category===cat.id||childIds.includes(t.category)).length;return{label:cat.label,count,color:cat.color};});
   const ctx=document.getElementById('tt_chartCategory')?.getContext('2d'); if(!ctx)return;
   tt_chartCategory=new Chart(ctx,{type:'doughnut',data:{labels:data.map(d=>d.label),datasets:[{data:data.map(d=>d.count),backgroundColor:data.map(d=>d.color+'cc'),borderColor:'#0a0a0f',borderWidth:2}]},options:{...TT_CHART_DEFAULTS,plugins:{legend:{display:true,labels:{color:'#9090aa',font:{size:11}}}}}});
   document.getElementById('tt_categoryLegend').innerHTML=data.map(d=>`<div class="legend-item"><div class="legend-dot" style="background:${d.color}"></div><span class="legend-label">${d.label}</span><span class="legend-val" style="color:${d.color}">${d.count}</span></div>`).join('');
@@ -6207,15 +6471,20 @@ function tt_renderAssigneeChart() {
 
 function tt_renderPlatformChart() {
   if(tt_chartPlatform)tt_chartPlatform.destroy();
-  const platMap={};SOCIAL_PLATFORMS.forEach(p=>{platMap[p.id]={label:p.label,icon:p.icon,color:p.color,total:0,done:0};});
+  // Build flat map of all TT categories including children
+  const platMap={};
+  TT_CATEGORIES.forEach(cat=>{
+    platMap[cat.id]={label:cat.label,icon:cat.icon||'📋',color:cat.color,total:0,done:0};
+    if(cat.children)cat.children.forEach(ch=>{platMap[ch.id]={label:ch.label,icon:ch.icon||'•',color:ch.color,total:0,done:0};});
+  });
   tt_tasks.forEach(t=>{if(platMap[t.category]){platMap[t.category].total++;if(t.done)platMap[t.category].done++;}});
-  const allPlats=Object.values(platMap);
-  const totalSocial=allPlats.reduce((s,p)=>s+p.total,0),doneSocial=allPlats.reduce((s,p)=>s+p.done,0);
-  const topPlat=allPlats.reduce((a,b)=>a.total>=b.total?a:b,allPlats[0]);
-  document.getElementById('tt_platformSummary').innerHTML=`<div class="asummary-card"><div class="asummary-val" style="color:var(--accent)">${totalSocial}</div><div class="asummary-label">Social Tasks</div></div><div class="asummary-card"><div class="asummary-val" style="color:#2ecc71">${doneSocial}</div><div class="asummary-label">Completed</div></div><div class="asummary-card"><div class="asummary-val" style="color:#ff9f43;font-size:1rem">${topPlat.icon} ${topPlat.label}</div><div class="asummary-label">Most Active</div></div>`;
+  const allCats=Object.values(platMap).filter(p=>p.total>0);
+  const topCat=allCats.length?allCats.reduce((a,b)=>a.total>=b.total?a:b,allCats[0]):{icon:'—',label:'None'};
+  const totalAll=allCats.reduce((s,p)=>s+p.total,0),doneAll=allCats.reduce((s,p)=>s+p.done,0);
+  document.getElementById('tt_platformSummary').innerHTML=`<div class="asummary-card"><div class="asummary-val" style="color:var(--accent)">${totalAll}</div><div class="asummary-label">Total Tasks</div></div><div class="asummary-card"><div class="asummary-val" style="color:#2ecc71">${doneAll}</div><div class="asummary-label">Completed</div></div><div class="asummary-card"><div class="asummary-val" style="color:#ff9f43;font-size:0.85rem">${topCat.icon} ${topCat.label}</div><div class="asummary-label">Most Active</div></div>`;
   const ctx=document.getElementById('tt_chartPlatform')?.getContext('2d'); if(!ctx)return;
-  tt_chartPlatform=new Chart(ctx,{type:'bar',data:{labels:allPlats.map(p=>`${p.icon} ${p.label}`),datasets:[{label:'Completed',data:allPlats.map(p=>p.done),backgroundColor:allPlats.map(p=>p.color+'cc'),borderRadius:4},{label:'Pending',data:allPlats.map(p=>p.total-p.done),backgroundColor:allPlats.map(p=>p.color+'44'),borderRadius:4}]},options:{...TT_CHART_DEFAULTS,plugins:{legend:{display:true,labels:{color:'#9090aa',font:{size:11}}}},scales:{x:{stacked:true,ticks:{color:'#6b6b80',font:{size:10}},grid:{color:'#2a2a3a'}},y:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'},beginAtZero:true}}}});
-  document.getElementById('tt_platformLegend').innerHTML=allPlats.map(p=>{const rate=p.total?Math.round(p.done/p.total*100):0;return`<div class="legend-item"><div class="legend-dot" style="background:${p.color}"></div><span class="legend-label">${p.icon} ${p.label}</span><span class="legend-val" style="color:${p.color}">${p.done}/${p.total}</span><span style="font-size:0.65rem;color:var(--text-muted);margin-left:2px">${rate}%</span></div>`;}).join('');
+  tt_chartPlatform=new Chart(ctx,{type:'bar',data:{labels:allCats.map(p=>`${p.icon} ${p.label}`),datasets:[{label:'Completed',data:allCats.map(p=>p.done),backgroundColor:allCats.map(p=>p.color+'cc'),borderRadius:4},{label:'Pending',data:allCats.map(p=>p.total-p.done),backgroundColor:allCats.map(p=>p.color+'44'),borderRadius:4}]},options:{...TT_CHART_DEFAULTS,plugins:{legend:{display:true,labels:{color:'#9090aa',font:{size:11}}}},scales:{x:{stacked:true,ticks:{color:'#6b6b80',font:{size:10}},grid:{color:'#2a2a3a'}},y:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'},beginAtZero:true}}}});
+  document.getElementById('tt_platformLegend').innerHTML=allCats.map(p=>{const rate=p.total?Math.round(p.done/p.total*100):0;return`<div class="legend-item"><div class="legend-dot" style="background:${p.color}"></div><span class="legend-label">${p.icon} ${p.label}</span><span class="legend-val" style="color:${p.color}">${p.done}/${p.total}</span><span style="font-size:0.65rem;color:var(--text-muted);margin-left:2px">${rate}%</span></div>`;}).join('');
 }
 
 function tt_renderOverdueReport() {
@@ -6229,7 +6498,7 @@ function tt_renderOverdueReport() {
   list.innerHTML='';
   Object.keys(byAssignee).forEach(name=>{
     const header=document.createElement('div');header.style.cssText=`font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;color:#ff9f43;letter-spacing:0.08em;text-transform:uppercase;margin-top:8px;margin-bottom:4px`;header.innerHTML=`👤 ${name} <span style="background:rgba(255,107,107,0.15);color:#ff6b6b;border-radius:4px;padding:1px 7px;font-size:0.68rem">${byAssignee[name].length} overdue</span>`;list.appendChild(header);
-    byAssignee[name].forEach(t=>{const cat=CATEGORIES.find(c=>c.id===t.category)||CATEGORIES[CATEGORIES.length-1];const days=Math.floor((new Date(todayKey)-new Date(t.date))/86400000);const item=document.createElement('div');item.style.cssText=`background:var(--surface2);border:1px solid rgba(255,107,107,0.25);border-radius:8px;padding:10px 14px;cursor:pointer;position:relative;overflow:hidden`;item.innerHTML=`<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#ff6b6b;border-radius:3px 0 0 3px"></div><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px"><div style="font-family:'Syne',sans-serif;font-weight:600;font-size:0.82rem;flex:1">${t.title}</div><span style="background:rgba(255,107,107,0.15);color:#ff6b6b;border-radius:4px;padding:2px 8px;font-size:0.68rem">⚠️ ${days}d overdue</span></div><div style="display:flex;gap:6px"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span><span style="font-size:0.68rem;color:var(--text-muted)">📅 ${t.date}</span></div>`;item.onclick=()=>{tt_closeAnalytics();tt_selectDay(t.date);};list.appendChild(item);});
+    byAssignee[name].forEach(t=>{const cat=tt_findCat(t.category);const days=Math.floor((new Date(todayKey)-new Date(t.date))/86400000);const item=document.createElement('div');item.style.cssText=`background:var(--surface2);border:1px solid rgba(255,107,107,0.25);border-radius:8px;padding:10px 14px;cursor:pointer;position:relative;overflow:hidden`;item.innerHTML=`<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#ff6b6b;border-radius:3px 0 0 3px"></div><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px"><div style="font-family:'Syne',sans-serif;font-weight:600;font-size:0.82rem;flex:1">${t.title}</div><span style="background:rgba(255,107,107,0.15);color:#ff6b6b;border-radius:4px;padding:2px 8px;font-size:0.68rem">⚠️ ${days}d overdue</span></div><div style="display:flex;gap:6px"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span><span style="font-size:0.68rem;color:var(--text-muted)">📅 ${t.date}</span></div>`;item.onclick=()=>{tt_closeAnalytics();tt_selectDay(t.date);};list.appendChild(item);});
   });
 }
 
@@ -6260,7 +6529,7 @@ window.tt_renderTrendChart=tt_renderTrendChart; window.tt_resetTrendDates=tt_res
 function tt_exportToExcel() {
   if(!window.XLSX){alert('Excel library not loaded yet.');return;}
   const wb=XLSX.utils.book_new();
-  const rows=tt_tasks.map(t=>{const cat=CATEGORIES.find(c=>c.id===t.category)||CATEGORIES[CATEGORIES.length-1];return{'Title':t.title,'Category':cat.label,'Assigned To':t.assignedTo||'Unassigned','Created By':t.createdByName||'','Date':t.date,'Time':t.time||'','Priority':t.priority||'normal','Status':t.done?'Completed':(!t.done&&t.date<today()?'OVERDUE':'Pending'),'Notes':t.notes||''};});
+  const rows=tt_tasks.map(t=>{const cat=tt_findCat(t.category);return{'Title':t.title,'Category':cat.label,'Assigned To':t.assignedTo||'Unassigned','Created By':t.createdByName||'','Date':t.date,'Time':t.time||'','Priority':t.priority||'normal','Status':t.done?'Completed':(!t.done&&t.date<today()?'OVERDUE':'Pending'),'Notes':t.notes||''};});
   const ws=XLSX.utils.json_to_sheet(rows); XLSX.utils.book_append_sheet(wb,ws,'All Tasks');
   XLSX.writeFile(wb,`CMG-TaskTracking-${today()}.xlsx`);
 }
@@ -6333,6 +6602,7 @@ function initTrackingTab() {
   // Add Task modal
   document.getElementById('tt_openModal').onclick = () => {
     tt_editingTaskId = null;
+    tt_selectedCat = 'emailer';
     document.getElementById('tt_modalTitleText').textContent = 'New Task';
     document.getElementById('tt_saveTask').textContent = 'Add to Calendar';
     document.getElementById('tt_taskTitle').value = '';
@@ -6344,6 +6614,7 @@ function initTrackingTab() {
     document.getElementById('tt_taskDate').value = tt_selectedDate || today();
     document.getElementById('tt_modalOverlay').classList.add('open');
     tt_buildCatSelector();
+    tt_updateSubFields();
     tt_populateAssigneeDropdown();
   };
   document.getElementById('tt_closeModal').onclick = () => document.getElementById('tt_modalOverlay').classList.remove('open');
@@ -6354,6 +6625,7 @@ function initTrackingTab() {
     const title = document.getElementById('tt_taskTitle').value.trim();
     const date  = document.getElementById('tt_taskDate').value;
     if (!title || !date) { alert('Please fill in title and date.'); return; }
+    const subFieldData = tt_collectSubFields();
     const taskData = {
       title, date,
       category:   tt_selectedCat,
@@ -6363,6 +6635,7 @@ function initTrackingTab() {
       priority:   document.getElementById('tt_taskPriority').value,
       assignedTo: document.getElementById('tt_taskAssignee')?.value || '',
       approval:   document.getElementById('tt_taskApproval')?.value || '',
+      ...subFieldData,
     };
     if (tt_editingTaskId) {
       await tt_updateTask(tt_editingTaskId, taskData);
