@@ -207,36 +207,26 @@
   .cat-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 6px;
+    gap: 8px;
+    padding: 6px 8px;
     border-radius: 6px;
     cursor: pointer;
     transition: background 0.15s;
-    font-size: clamp(0.65rem, 1.1vw, 0.75rem);
-    line-height: 1.3;
-    min-width: 0;
+    font-size: 0.8rem;
   }
   .cat-item:hover { background: var(--surface2); }
   .cat-dot {
-    width: 7px; height: 7px;
+    width: 8px; height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
   }
-  .cat-name {
-    color: var(--text-dim);
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: clamp(0.65rem, 1.1vw, 0.75rem);
-  }
+  .cat-name { color: var(--text-dim); flex: 1; }
   .cat-count {
     background: var(--surface2);
     border-radius: 4px;
-    padding: 1px 5px;
-    font-size: clamp(0.58rem, 0.9vw, 0.65rem);
+    padding: 1px 6px;
+    font-size: 0.7rem;
     color: var(--text-muted);
-    flex-shrink: 0;
   }
 
   /* Stats */
@@ -754,21 +744,12 @@
   .cat-sub-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 3px 6px 3px 18px;
+    gap: 8px;
+    padding: 5px 8px 5px 20px;
     border-radius: 6px;
     cursor: pointer;
     transition: background 0.15s;
-    font-size: clamp(0.6rem, 1vw, 0.7rem);
-    line-height: 1.3;
-    min-width: 0;
-  }
-  .cat-sub-item span:not(.cat-count) {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex: 1;
-    min-width: 0;
+    font-size: 0.75rem;
   }
   .cat-sub-item:hover { background: var(--surface2); }
 
@@ -1225,16 +1206,6 @@
     .cal-grid-header div { font-size: 0.6rem; padding: 5px 0; }
     .cal-day { min-height: 58px; }
     .day-num { font-size: 0.75rem; width: 20px; height: 20px; }
-    .cat-item { font-size: 0.7rem; gap: 5px; padding: 4px 5px; }
-    .cat-name { font-size: 0.7rem; }
-    .cat-sub-item { font-size: 0.65rem; padding: 3px 5px 3px 14px; }
-    .cat-count { font-size: 0.6rem; padding: 1px 4px; }
-  }
-
-  @media (min-width: 481px) and (max-width: 1024px) {
-    .cat-item { font-size: 0.72rem; }
-    .cat-name { font-size: 0.72rem; }
-    .cat-sub-item { font-size: 0.67rem; }
   }
 
   /* ─── ANALYTICS MODAL ─── */
@@ -1530,7 +1501,7 @@
   </div>
 </div>
 
-<!-- ─── TAB 1: CMG SocMed Activities & Events Calendar ─── -->
+<!-- TAB 1: CMG SocMed Activities & Events Calendar -->
 <div id="appTabCalendar">
 
 <!-- HEADER -->
@@ -1863,464 +1834,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- SheetJS for Excel export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-</div><!-- end #appTabCalendar -->
-
-<!-- ─── TAB 2: CMG Task Tracking (full duplicate) ─── -->
-<div id="appTabTracking" style="display:none">
-
-<!-- HEADER TT -->
-<header id="tt_header">
-  <div class="logo">
-    <div class="logo-dot"></div>
-    CMG Task Tracking
-  </div>
-  <div class="header-right">
-    <button onclick="tt_openAnalytics()" style="
-      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-      padding: 7px 13px; color: var(--text-muted); cursor: pointer; transition: all 0.2s;
-      display: flex; align-items: center; gap: 6px;
-      font-family: 'DM Mono', monospace; font-size: 0.75rem;
-    ">📊 <span>Analytics</span></button>
-    <div class="view-tabs">
-      <button class="view-tab active" id="tt_vtMonth"  onclick="tt_switchView('month')">📅 Month</button>
-      <button class="view-tab"        id="tt_vtWeek"   onclick="tt_switchView('week')">📆 Week</button>
-      <button class="view-tab"        id="tt_vtAgenda" onclick="tt_switchView('agenda')">📋 Agenda</button>
-    </div>
-    <div class="notif-bell-wrap">
-      <button class="notif-bell-btn" id="tt_notifBellBtn" onclick="tt_toggleNotifDropdown()">
-        🔔 <span id="tt_notifBellLabel">Alerts</span>
-        <span class="notif-badge" id="tt_notifBadge">0</span>
-      </button>
-      <div class="notif-dropdown" id="tt_notifDropdown">
-        <div class="notif-dropdown-header">
-          <span>🔔 Notifications</span>
-          <button class="notif-clear-btn" onclick="tt_clearAllNotifs()">Clear all</button>
-        </div>
-        <div id="tt_notifList"><div class="notif-empty">No notifications yet</div></div>
-      </div>
-    </div>
-    <button id="tt_notifBtn" title="Enable Desktop Alerts" style="
-      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-      padding: 7px 13px; color: var(--text-muted); cursor: pointer; transition: all 0.2s;
-      display: flex; align-items: center; gap: 6px; font-family: 'DM Mono', monospace; font-size: 0.75rem;
-    ">🔔 <span id="tt_notifLabel">Enable Alerts</span></button>
-    <div class="month-nav">
-      <button id="tt_prevMonth">‹</button>
-      <span class="month-label" id="tt_monthLabel"></span>
-      <button id="tt_nextMonth">›</button>
-    </div>
-    <button class="btn-add" id="tt_openModal">+ Add Task</button>
-    <div class="user-chip" id="tt_userChip"><div class="user-chip-dot"></div><span id="tt_userChipName">—</span></div>
-    <button class="btn-logout" id="tt_logoutBtn">Sign Out</button>
-  </div>
-</header>
-
-<!-- APP TT -->
-<div class="app">
-  <!-- LEFT SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-section">
-      <h3>Quick Nav</h3>
-      <div class="mini-cal">
-        <div class="mini-cal-grid" id="tt_miniCalHeader">
-          <div class="day-header">S</div><div class="day-header">M</div>
-          <div class="day-header">T</div><div class="day-header">W</div>
-          <div class="day-header">T</div><div class="day-header">F</div>
-          <div class="day-header">S</div>
-        </div>
-        <div class="mini-cal-grid" id="tt_miniCalDays"></div>
-      </div>
-    </div>
-    <div class="sidebar-section">
-      <h3>Stats</h3>
-      <div class="stat-grid">
-        <div class="stat-card"       onclick="tt_openStatModal('all')"       title="View all tasks"><div class="stat-val" id="tt_statTotal">0</div><div class="stat-label">Total Tasks</div></div>
-        <div class="stat-card green" onclick="tt_openStatModal('completed')" title="View completed"><div class="stat-val" id="tt_statDone">0</div><div class="stat-label">Completed</div></div>
-        <div class="stat-card blue"  onclick="tt_openStatModal('month')"     title="This month"><div class="stat-val" id="tt_statMonth">0</div><div class="stat-label">This Month</div></div>
-        <div class="stat-card red"   onclick="tt_openStatModal('pending')"   title="View pending"><div class="stat-val" id="tt_statPending">0</div><div class="stat-label">Pending</div></div>
-      </div>
-      <div class="progress-wrap" style="margin-top:12px">
-        <div class="progress-bar" id="tt_progressBar" style="width:0%"></div>
-      </div>
-      <div class="progress-label">
-        <span>Progress this month</span>
-        <span id="tt_progressPct">0%</span>
-      </div>
-    </div>
-    <div class="sidebar-section">
-      <h3>Categories <span id="tt_catMonthLabel" style="font-family:'DM Mono',monospace;font-weight:400;font-size:0.62rem;color:var(--text-muted);text-transform:none;letter-spacing:0"></span></h3>
-      <div id="tt_catList"></div>
-    </div>
-    <div class="sidebar-section">
-      <h3>🇵🇭 PH Holidays 2026</h3>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <div style="display:flex;align-items:center;gap:8px;font-size:0.75rem">
-          <div style="width:10px;height:10px;border-radius:2px;background:#ff6b6b;flex-shrink:0"></div>
-          <span style="color:var(--text-dim)">Regular Holiday</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:0.75rem">
-          <div style="width:10px;height:10px;border-radius:2px;background:#ff9f43;flex-shrink:0"></div>
-          <span style="color:var(--text-dim)">Special Non-Working</span>
-        </div>
-      </div>
-    </div>
-    <!-- MATERIALS GENERATION SECTION TT -->
-    <div class="sidebar-section" id="tt_materialsSection">
-      <h3>🎨 Materials Generation</h3>
-      <div id="tt_matLinkList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
-      <div id="tt_matAddForm" style="display:none;flex-direction:column;gap:6px;margin-bottom:8px">
-        <input id="tt_matLinkTitle" placeholder="Title (e.g. Canva — May Layouts)" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:0.75rem;outline:none;width:100%;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
-        <input id="tt_matLinkUrl" placeholder="https://canva.com/..." style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:0.75rem;outline:none;width:100%;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent3)'" onblur="this.style.borderColor='var(--border)'" />
-        <div style="display:flex;gap:6px">
-          <button onclick="tt_saveMaterialLink()" style="flex:1;background:var(--accent);color:#0a0a0f;border:none;border-radius:6px;padding:7px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;cursor:pointer;transition:all 0.15s;letter-spacing:0.03em;">Save</button>
-          <button onclick="tt_cancelMaterialLink()" style="flex:1;background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:7px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;cursor:pointer;transition:all 0.15s;">Cancel</button>
-        </div>
-      </div>
-      <button onclick="tt_showMatAddForm()" id="tt_matAddBtn" style="width:100%;background:rgba(107,159,255,0.08);border:1px dashed rgba(107,159,255,0.35);border-radius:7px;padding:8px;color:var(--accent3);font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;">＋ Add Link</button>
-    </div>
-    <div class="sidebar-section" id="tt_adminBtnWrap" style="display:none">
-      <button id="tt_adminOpenBtn" style="width:100%;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.25);border-radius:8px;padding:10px;color:var(--accent);font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;letter-spacing:0.05em;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px;justify-content:center;">
-        ⚙️ Admin Panel <span id="tt_pendingBadge" style="background:var(--accent2);color:#fff;border-radius:50%;width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:0.65rem;"></span>
-      </button>
-    </div>
-  </aside>
-
-  <!-- MAIN CALENDAR TT -->
-  <main class="cal-main" id="tt_calMain">
-    <div class="cat-filter-bar" id="tt_catFilterBar"></div>
-    <div id="tt_viewMonth">
-      <div class="cal-grid-header">
-        <div>Sun</div><div>Mon</div><div>Tue</div>
-        <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-      </div>
-      <div class="cal-grid" id="tt_calGrid"></div>
-    </div>
-    <div id="tt_viewWeek" style="display:none;padding:1rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-        <button onclick="tt_weekNav(-1)" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--text-muted);cursor:pointer;font-size:1rem">‹</button>
-        <span id="tt_weekLabel" style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem"></span>
-        <button onclick="tt_weekNav(1)" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--text-muted);cursor:pointer;font-size:1rem">›</button>
-      </div>
-      <div class="week-view-wrap"><div class="week-grid" id="tt_weekGrid"></div></div>
-    </div>
-    <div id="tt_viewAgenda" style="display:none;padding:1.5rem"></div>
-  </main>
-
-  <!-- RIGHT PANEL TT -->
-  <div class="right-panel">
-    <div class="panel-header">
-      <div class="panel-date" id="tt_panelDate">—</div>
-      <div class="panel-date-sub" id="tt_panelSub">Select a day</div>
-    </div>
-    <div class="panel-tasks" id="tt_panelTasks">
-      <div class="empty-day"><div class="empty-icon">📅</div><p>Click a day to view tasks</p></div>
-    </div>
-  </div>
-</div>
-
-<!-- MOBILE NAV TT -->
-<nav class="mob-nav" id="tt_mobNav">
-  <div class="mob-nav-inner">
-    <button class="mob-nav-btn active" id="tt_mnbCal" onclick="tt_mobNav('cal')">
-      <span class="mnb-icon">📅</span><span class="mnb-label">Calendar</span>
-    </button>
-    <button class="mob-nav-btn" id="tt_mnbAdd" onclick="tt_mobNav('add')">
-      <span class="mnb-icon" style="background:var(--accent);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#0a0a0f;margin-bottom:2px">+</span>
-      <span class="mnb-label">Add</span>
-    </button>
-    <button class="mob-nav-btn" id="tt_mnbStats" onclick="tt_mobNav('stats')">
-      <span class="mnb-icon">📊</span><span class="mnb-label">Stats</span>
-    </button>
-    <button class="mob-nav-btn" id="tt_mnbMenu" onclick="tt_mobNav('menu')">
-      <span class="mnb-icon">☰</span><span class="mnb-label">Menu</span>
-    </button>
-  </div>
-</nav>
-
-<!-- MOBILE DRAWERS TT -->
-<div class="mob-drawer" id="tt_mobStatsDrawer">
-  <div class="mob-drawer-backdrop" onclick="tt_closeMobDrawer('tt_mobStatsDrawer')"></div>
-  <div class="mob-drawer-sheet">
-    <div class="mob-drawer-handle"></div>
-    <div class="mob-drawer-title">📊 Stats &amp; Categories</div>
-    <div class="stat-grid" style="margin-bottom:10px">
-      <div class="stat-card" onclick="tt_openStatModal('all')"><div class="stat-val" id="tt_mStatTotal">0</div><div class="stat-label">Total Tasks</div></div>
-      <div class="stat-card green" onclick="tt_openStatModal('completed')"><div class="stat-val" id="tt_mStatDone">0</div><div class="stat-label">Completed</div></div>
-      <div class="stat-card blue" onclick="tt_openStatModal('month')"><div class="stat-val" id="tt_mStatMonth">0</div><div class="stat-label">This Month</div></div>
-      <div class="stat-card red" onclick="tt_openStatModal('pending')"><div class="stat-val" id="tt_mStatPending">0</div><div class="stat-label">Pending</div></div>
-    </div>
-    <div class="progress-wrap"><div class="progress-bar" id="tt_mProgressBar" style="width:0%"></div></div>
-    <div class="progress-label"><span>Progress this month</span><span id="tt_mProgressPct">0%</span></div>
-    <div id="tt_mCatList" style="margin-top:1rem"></div>
-  </div>
-</div>
-<div class="mob-drawer" id="tt_mobMenuDrawer">
-  <div class="mob-drawer-backdrop" onclick="tt_closeMobDrawer('tt_mobMenuDrawer')"></div>
-  <div class="mob-drawer-sheet">
-    <div class="mob-drawer-handle"></div>
-    <div class="mob-drawer-title"><span>☰ Menu</span></div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
-        <button onclick="tt_mobChangeMonth(-1)" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;padding:4px 12px">‹</button>
-        <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem" id="tt_mobMonthLabel"></span>
-        <button onclick="tt_mobChangeMonth(1)" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;padding:4px 12px">›</button>
-      </div>
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px">
-        <div class="mini-cal-grid" style="margin-bottom:4px">
-          <div class="day-header">S</div><div class="day-header">M</div><div class="day-header">T</div>
-          <div class="day-header">W</div><div class="day-header">T</div><div class="day-header">F</div><div class="day-header">S</div>
-        </div>
-        <div class="mini-cal-grid" id="tt_mobMiniCal"></div>
-      </div>
-      <button onclick="tt_openAnalytics();tt_closeMobDrawer('tt_mobMenuDrawer')" style="background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.2);border-radius:10px;padding:12px 16px;color:var(--accent);font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;text-align:left;width:100%">📊 Analytics & Reports</button>
-      <button onclick="doLogout()" style="background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2);border-radius:10px;padding:12px 16px;color:var(--accent2);font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;text-align:left;width:100%">🚪 Sign Out</button>
-    </div>
-  </div>
-</div>
-<div class="mob-panel" id="tt_mobDayPanel">
-  <div class="mob-panel-backdrop" onclick="tt_closeMobPanel()"></div>
-  <div class="mob-panel-sheet">
-    <div class="mob-drawer-handle"></div>
-    <div class="mob-drawer-title">
-      <div>
-        <div style="font-family:'Fraunces',serif;font-size:1.3rem;font-weight:600;line-height:1.1" id="tt_mobPanelDate">—</div>
-        <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em" id="tt_mobPanelSub"></div>
-      </div>
-      <button onclick="tt_closeMobPanel()" style="background:none;border:none;color:var(--text-muted);font-size:1rem;cursor:pointer">✕</button>
-    </div>
-    <div id="tt_mobPanelTasks"></div>
-  </div>
-</div>
-
-<!-- MODALS TT -->
-<!-- Stat Modal -->
-<div class="stat-modal-overlay" id="tt_statModalOverlay">
-  <div class="stat-modal">
-    <div class="stat-modal-header">
-      <div class="stat-modal-title">
-        <span id="tt_statModalIcon">📋</span>
-        <span id="tt_statModalTitle">Tasks</span>
-        <span class="stat-modal-badge" id="tt_statModalBadge" style="background:rgba(200,241,53,0.12);color:var(--accent)">0</span>
-      </div>
-      <button class="stat-modal-close" onclick="tt_closeStatModal()">✕</button>
-    </div>
-    <div class="stat-modal-body" id="tt_statModalBody"></div>
-  </div>
-</div>
-
-<!-- Add/Edit Task Modal TT -->
-<div class="modal-overlay" id="tt_modalOverlay">
-  <div class="modal">
-    <div class="modal-title">
-      <span id="tt_modalTitleText">New Task</span>
-      <button class="modal-close" id="tt_closeModal">✕</button>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Task Title</label>
-      <input class="form-input" id="tt_taskTitle" placeholder="e.g. Publish Instagram carousel..." />
-    </div>
-    <div class="form-group">
-      <label class="form-label">Category</label>
-      <div class="cat-selector" id="tt_catSelector"></div>
-    </div>
-    <!-- Dynamic sub-fields per category -->
-    <div id="tt_subFieldsWrap" style="display:none"></div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Date</label>
-        <input class="form-input" type="date" id="tt_taskDate" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Time (optional)</label>
-        <input class="form-input" type="time" id="tt_taskTime" />
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">🔔 Remind Me Before</label>
-      <select class="form-select" id="tt_taskRemind">
-        <option value="0">At task time</option>
-        <option value="5">5 minutes before</option>
-        <option value="10" selected>10 minutes before</option>
-        <option value="15">15 minutes before</option>
-        <option value="30">30 minutes before</option>
-        <option value="60">1 hour before</option>
-        <option value="1440">1 day before</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Notes</label>
-      <textarea class="form-textarea" id="tt_taskNotes" rows="3" placeholder="Describe the task, links, or details..."></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Priority</label>
-      <select class="form-select" id="tt_taskPriority">
-        <option value="normal">Normal</option>
-        <option value="high">High Priority</option>
-        <option value="low">Low Priority</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Assign To</label>
-      <select class="assignee-select" id="tt_taskAssignee">
-        <option value="">— Unassigned —</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">🏷️ Approval</label>
-      <select class="form-select" id="tt_taskApproval">
-        <option value="">— No Approval Needed —</option>
-        <option value="CMG_SV">CMG_SV</option>
-        <option value="Engineering">Engineering</option>
-        <option value="Final Approval">Final Approval</option>
-      </select>
-    </div>
-    <button class="btn-submit" id="tt_saveTask">Add to Calendar</button>
-  </div>
-</div>
-
-<!-- Task Detail Modal TT -->
-<div class="task-detail-overlay" id="tt_taskDetailOverlay">
-  <div class="task-detail-modal">
-    <div class="task-detail-header">
-      <div>
-        <div class="task-detail-title" id="tt_tdTitle"></div>
-        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap" id="tt_tdMeta"></div>
-      </div>
-      <button class="task-detail-close" onclick="tt_closeTaskDetail()">✕</button>
-    </div>
-    <div class="task-detail-body">
-      <div class="detail-section">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div><div class="detail-section-title">Created By</div><div id="tt_tdCreatedBy" style="font-size:0.82rem;color:var(--text-dim)">—</div></div>
-          <div><div class="detail-section-title">Assigned To</div><div id="tt_tdAssignedTo" style="font-size:0.82rem;color:var(--text-dim)">—</div></div>
-        </div>
-      </div>
-      <!-- Sub-fields (e.g. Company Name, Quotation Number, Amount) -->
-      <div class="detail-section" id="tt_tdSubFieldsSection" style="display:none">
-        <div class="detail-section-title">📑 Details</div>
-        <div id="tt_tdSubFields"></div>
-      </div>
-      <div class="detail-section" id="tt_tdNotesSection">
-        <div class="detail-section-title">Notes</div>
-        <div id="tt_tdNotes" style="font-size:0.82rem;color:var(--text-dim);line-height:1.6;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px"></div>
-      </div>
-      <div class="detail-section">
-        <div class="detail-section-title">🔗 Attached Links</div>
-        <div id="tt_tdLinks"></div>
-        <div class="link-input-row">
-          <input class="link-input" id="tt_tdLinkInput" placeholder="https://..." />
-          <button class="link-add-btn" onclick="tt_addLink()">+ Add Link</button>
-        </div>
-      </div>
-      <div class="detail-section">
-        <div class="detail-section-title">💬 Comments</div>
-        <div class="comment-list" id="tt_tdComments"></div>
-        <div class="comment-input-row">
-          <textarea class="comment-input" id="tt_tdCommentInput" placeholder="Add a comment..." rows="2"></textarea>
-          <button class="comment-send" onclick="tt_addComment()">Send</button>
-        </div>
-      </div>
-      <div class="detail-section">
-        <div class="detail-section-title">📋 Activity Log</div>
-        <div id="tt_tdActivity"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Analytics Modal TT -->
-<div class="analytics-overlay hidden" id="tt_analyticsOverlay">
-  <div class="analytics-modal">
-    <div class="analytics-header">
-      <div class="analytics-title">📊 Analytics & Reports</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="analytics-export-btn" onclick="tt_exportToExcel()">⬇ Excel</button>
-        <button class="analytics-export-btn pdf" onclick="tt_openReportModal()">⬇ PDF Report</button>
-        <button class="analytics-close" onclick="tt_closeAnalytics()">✕</button>
-      </div>
-    </div>
-    <div class="analytics-tabs" style="overflow-x:auto;flex-wrap:nowrap">
-      <button class="atab active" id="tt_atab-category" onclick="tt_switchATab('category')">By Category</button>
-      <button class="atab" id="tt_atab-weekly"   onclick="tt_switchATab('weekly')">Weekly</button>
-      <button class="atab" id="tt_atab-monthly"  onclick="tt_switchATab('monthly')">Monthly</button>
-      <button class="atab" id="tt_atab-assignee" onclick="tt_switchATab('assignee')">👤 By Assignee</button>
-      <button class="atab" id="tt_atab-platform" onclick="tt_switchATab('platform')">📱 Platform</button>
-      <button class="atab" id="tt_atab-overdue"  onclick="tt_switchATab('overdue')">⚠️ Overdue</button>
-      <button class="atab" id="tt_atab-trend"    onclick="tt_switchATab('trend')">📈 Trend</button>
-    </div>
-    <div class="analytics-panel" id="tt_apanel-category">
-      <div class="analytics-chart-wrap"><canvas id="tt_chartCategory"></canvas></div>
-      <div id="tt_categoryLegend" class="analytics-legend"></div>
-    </div>
-    <div class="analytics-panel hidden" id="tt_apanel-weekly">
-      <div class="analytics-summary" id="tt_weeklySummary"></div>
-      <div class="analytics-chart-wrap"><canvas id="tt_chartWeekly"></canvas></div>
-    </div>
-    <div class="analytics-panel hidden" id="tt_apanel-monthly">
-      <div class="analytics-summary" id="tt_monthlySummary"></div>
-      <div class="analytics-chart-wrap"><canvas id="tt_chartMonthly"></canvas></div>
-    </div>
-    <div class="analytics-panel hidden" id="tt_apanel-assignee">
-      <div class="analytics-summary" id="tt_assigneeSummary"></div>
-      <div class="analytics-chart-wrap"><canvas id="tt_chartAssignee"></canvas></div>
-      <div id="tt_assigneeLegend" class="analytics-legend" style="margin-top:1rem"></div>
-    </div>
-    <div class="analytics-panel hidden" id="tt_apanel-platform">
-      <div class="analytics-summary" id="tt_platformSummary"></div>
-      <div class="analytics-chart-wrap"><canvas id="tt_chartPlatform"></canvas></div>
-      <div id="tt_platformLegend" class="analytics-legend" style="margin-top:1rem"></div>
-    </div>
-    <div class="analytics-panel hidden" id="tt_apanel-overdue">
-      <div class="analytics-summary" id="tt_overdueSummary"></div>
-      <div id="tt_overdueList" style="display:flex;flex-direction:column;gap:8px;margin-top:1rem"></div>
-    </div>
-    <div class="analytics-panel hidden" id="tt_apanel-trend">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:6px">
-          <label style="font-family:'Syne',sans-serif;font-weight:600;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase">From</label>
-          <input type="date" id="tt_trendFrom" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:0.78rem;outline:none" oninput="tt_renderTrendChart()" />
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <label style="font-family:'Syne',sans-serif;font-weight:600;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase">To</label>
-          <input type="date" id="tt_trendTo" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:0.78rem;outline:none" oninput="tt_renderTrendChart()" />
-        </div>
-        <button onclick="tt_resetTrendDates()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--text-muted);font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;cursor:pointer;">Reset</button>
-      </div>
-      <div class="analytics-summary" id="tt_trendSummary"></div>
-      <div class="analytics-chart-wrap"><canvas id="tt_chartTrend"></canvas></div>
-    </div>
-  </div>
-</div>
-
-<!-- Report Modal TT -->
-<div class="stat-modal-overlay" id="tt_reportModalOverlay" style="z-index:900">
-  <div class="stat-modal" style="width:480px;max-width:95vw">
-    <div class="stat-modal-header">
-      <div class="stat-modal-title"><span>📄</span><span>Generate PDF Report</span></div>
-      <button class="stat-modal-close" onclick="tt_closeReportModal()">✕</button>
-    </div>
-    <div class="stat-modal-body" style="padding:1.5rem">
-      <div style="margin-bottom:1.25rem">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Report Period</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="tt_reportPeriodBtns">
-          <button class="report-period-btn active" onclick="tt_selectReportPeriod('weekly')"   id="tt_rp-weekly">📅 Weekly</button>
-          <button class="report-period-btn"        onclick="tt_selectReportPeriod('monthly')"  id="tt_rp-monthly">📆 Monthly</button>
-          <button class="report-period-btn"        onclick="tt_selectReportPeriod('quarterly')" id="tt_rp-quarterly">📊 Quarterly</button>
-          <button class="report-period-btn"        onclick="tt_selectReportPeriod('annual')"   id="tt_rp-annual">📈 Annual</button>
-        </div>
-      </div>
-      <div id="tt_reportPeriodSelector" style="margin-bottom:1.25rem"></div>
-      <div id="tt_reportPreview" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:1.25rem;display:none">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Preview</div>
-        <div id="tt_reportPreviewContent" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
-      </div>
-      <button onclick="tt_generatePDFReport()" style="width:100%;background:var(--accent);color:#0a0a0f;border:none;border-radius:8px;padding:13px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Generate & Download PDF</button>
-    </div>
-  </div>
-</div>
-
-</div><!-- end #appTabTracking -->
 
 <!-- ANALYTICS MODAL -->
 <div class="analytics-overlay hidden" id="analyticsOverlay">
@@ -4492,9 +4005,6 @@ function enterApp(profile) {
   updateNotifBtn();
   rescheduleAll();
   initNewFeatures();
-
-  // Always init tracking tab on login so categories are fresh
-  window._trackingInited = false;
 }
 
 // ── FIREBASE AUTH STATE LISTENER ──
@@ -5487,623 +4997,590 @@ window.deleteMaterialLink = deleteMaterialLink;
 bindAllEvents();
 
 </script>
-<!-- ─── APP TAB BAR (replaces footer) ─── -->
-<div id="appTabBar" style="
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 150;
-  background: rgba(10,10,15,0.97);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid #2a2a3a;
-  display: flex;
-  align-items: stretch;
-  height: 40px;
-">
-  <button id="tabBtnCalendar" onclick="switchAppTab('calendar')" style="
-    flex: 1; background: none; border: none; border-right: 1px solid #2a2a3a;
-    color: #c8f135; font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 800; font-size: 0.78rem; letter-spacing: 0.08em;
-    text-transform: uppercase; cursor: pointer; transition: background 0.2s;
-    display: flex; align-items: center; justify-content: center; gap: 7px;
-    border-bottom: 2px solid #c8f135;
-  ">
+</div><!-- end #appTabCalendar -->
+
+<!-- ─── TAB 2: CMG Task Tracking ─── -->
+<div id="appTabTracking" style="display:none">
+
+<header id="tt_header">
+  <div class="logo"><div class="logo-dot"></div>CMG Task Tracking</div>
+  <div class="header-right">
+    <button onclick="tt_openAnalytics()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 13px;color:var(--text-muted);cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:0.75rem;">📊 <span>Analytics</span></button>
+    <div class="view-tabs">
+      <button class="view-tab active" id="tt_vtMonth" onclick="tt_switchView('month')">📅 Month</button>
+      <button class="view-tab" id="tt_vtWeek" onclick="tt_switchView('week')">📆 Week</button>
+      <button class="view-tab" id="tt_vtAgenda" onclick="tt_switchView('agenda')">📋 Agenda</button>
+    </div>
+    <div class="notif-bell-wrap">
+      <button class="notif-bell-btn" id="tt_notifBellBtn" onclick="tt_toggleNotifDropdown()">🔔 <span id="tt_notifBellLabel">Alerts</span><span class="notif-badge" id="tt_notifBadge">0</span></button>
+      <div class="notif-dropdown" id="tt_notifDropdown">
+        <div class="notif-dropdown-header"><span>🔔 Notifications</span><button class="notif-clear-btn" onclick="tt_clearAllNotifs()">Clear all</button></div>
+        <div id="tt_notifList"><div class="notif-empty">No notifications yet</div></div>
+      </div>
+    </div>
+    <button id="tt_notifBtn" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 13px;color:var(--text-muted);cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:0.75rem;">🔔 <span id="tt_notifLabel">Enable Alerts</span></button>
+    <div class="month-nav">
+      <button id="tt_prevMonth">‹</button>
+      <span class="month-label" id="tt_monthLabel"></span>
+      <button id="tt_nextMonth">›</button>
+    </div>
+    <button class="btn-add" id="tt_openModal">+ Add Task</button>
+    <div class="user-chip" id="tt_userChip"><div class="user-chip-dot"></div><span id="tt_userChipName">—</span></div>
+    <button class="btn-logout" id="tt_logoutBtn">Sign Out</button>
+  </div>
+</header>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <h3>Quick Nav</h3>
+      <div class="mini-cal">
+        <div class="mini-cal-grid">
+          <div class="day-header">S</div><div class="day-header">M</div><div class="day-header">T</div>
+          <div class="day-header">W</div><div class="day-header">T</div><div class="day-header">F</div><div class="day-header">S</div>
+        </div>
+        <div class="mini-cal-grid" id="tt_miniCalDays"></div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <h3>Stats</h3>
+      <div class="stat-grid">
+        <div class="stat-card" onclick="tt_openStatModal('all')"><div class="stat-val" id="tt_statTotal">0</div><div class="stat-label">Total Tasks</div></div>
+        <div class="stat-card green" onclick="tt_openStatModal('completed')"><div class="stat-val" id="tt_statDone">0</div><div class="stat-label">Completed</div></div>
+        <div class="stat-card blue" onclick="tt_openStatModal('month')"><div class="stat-val" id="tt_statMonth">0</div><div class="stat-label">This Month</div></div>
+        <div class="stat-card red" onclick="tt_openStatModal('pending')"><div class="stat-val" id="tt_statPending">0</div><div class="stat-label">Pending</div></div>
+      </div>
+      <div class="progress-wrap" style="margin-top:12px"><div class="progress-bar" id="tt_progressBar" style="width:0%"></div></div>
+      <div class="progress-label"><span>Progress this month</span><span id="tt_progressPct">0%</span></div>
+    </div>
+    <div class="sidebar-section">
+      <h3>Categories <span id="tt_catMonthLabel" style="font-family:'DM Mono',monospace;font-weight:400;font-size:0.62rem;color:var(--text-muted);text-transform:none;letter-spacing:0"></span></h3>
+      <div id="tt_catList"></div>
+    </div>
+    <div class="sidebar-section">
+      <h3>🇵🇭 PH Holidays 2026</h3>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.75rem"><div style="width:10px;height:10px;border-radius:2px;background:#ff6b6b;flex-shrink:0"></div><span style="color:var(--text-dim)">Regular Holiday</span></div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.75rem"><div style="width:10px;height:10px;border-radius:2px;background:#ff9f43;flex-shrink:0"></div><span style="color:var(--text-dim)">Special Non-Working</span></div>
+      </div>
+    </div>
+    <div class="sidebar-section" id="tt_materialsSection">
+      <h3>🎨 Materials Generation</h3>
+      <div id="tt_matLinkList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+      <div id="tt_matAddForm" style="display:none;flex-direction:column;gap:6px;margin-bottom:8px">
+        <input id="tt_matLinkTitle" placeholder="Title (e.g. Canva — May Layouts)" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:0.75rem;outline:none;width:100%;" />
+        <input id="tt_matLinkUrl" placeholder="https://canva.com/..." style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:0.75rem;outline:none;width:100%;" />
+        <div style="display:flex;gap:6px">
+          <button onclick="tt_saveMaterialLink()" style="flex:1;background:var(--accent);color:#0a0a0f;border:none;border-radius:6px;padding:7px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;cursor:pointer;">Save</button>
+          <button onclick="tt_cancelMaterialLink()" style="flex:1;background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:7px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;cursor:pointer;">Cancel</button>
+        </div>
+      </div>
+      <button onclick="tt_showMatAddForm()" id="tt_matAddBtn" style="width:100%;background:rgba(107,159,255,0.08);border:1px dashed rgba(107,159,255,0.35);border-radius:7px;padding:8px;color:var(--accent3);font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">＋ Add Link</button>
+    </div>
+    <div class="sidebar-section" id="tt_adminBtnWrap" style="display:none">
+      <button id="tt_adminOpenBtn" style="width:100%;background:rgba(200,241,53,0.08);border:1px solid rgba(200,241,53,0.25);border-radius:8px;padding:10px;color:var(--accent);font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:8px;justify-content:center;">⚙️ Admin Panel</button>
+    </div>
+  </aside>
+
+  <main class="cal-main" id="tt_calMain">
+    <div class="cat-filter-bar" id="tt_catFilterBar"></div>
+    <div id="tt_viewMonth">
+      <div class="cal-grid-header"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+      <div class="cal-grid" id="tt_calGrid"></div>
+    </div>
+    <div id="tt_viewWeek" style="display:none;padding:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <button onclick="tt_weekNav(-1)" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--text-muted);cursor:pointer;">‹</button>
+        <span id="tt_weekLabel" style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem"></span>
+        <button onclick="tt_weekNav(1)" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--text-muted);cursor:pointer;">›</button>
+      </div>
+      <div class="week-view-wrap"><div class="week-grid" id="tt_weekGrid"></div></div>
+    </div>
+    <div id="tt_viewAgenda" style="display:none;padding:1.5rem"></div>
+  </main>
+
+  <div class="right-panel">
+    <div class="panel-header">
+      <div class="panel-date" id="tt_panelDate">—</div>
+      <div class="panel-date-sub" id="tt_panelSub">Select a day</div>
+    </div>
+    <div class="panel-tasks" id="tt_panelTasks">
+      <div class="empty-day"><div class="empty-icon">📅</div><p>Click a day to view tasks</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile nav TT -->
+<nav class="mob-nav" id="tt_mobNav">
+  <div class="mob-nav-inner">
+    <button class="mob-nav-btn active" id="tt_mnbCal" onclick="tt_mobNav('cal')"><span class="mnb-icon">📅</span><span class="mnb-label">Calendar</span></button>
+    <button class="mob-nav-btn" id="tt_mnbAdd" onclick="tt_mobNav('add')"><span class="mnb-icon" style="background:var(--accent);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#0a0a0f;margin-bottom:2px">+</span><span class="mnb-label">Add</span></button>
+    <button class="mob-nav-btn" id="tt_mnbStats" onclick="tt_mobNav('stats')"><span class="mnb-icon">📊</span><span class="mnb-label">Stats</span></button>
+    <button class="mob-nav-btn" id="tt_mnbMenu" onclick="tt_mobNav('menu')"><span class="mnb-icon">☰</span><span class="mnb-label">Menu</span></button>
+  </div>
+</nav>
+
+<!-- Stat Modal TT -->
+<div class="stat-modal-overlay" id="tt_statModalOverlay">
+  <div class="stat-modal">
+    <div class="stat-modal-header">
+      <div class="stat-modal-title"><span id="tt_statModalIcon">📋</span><span id="tt_statModalTitle">Tasks</span><span class="stat-modal-badge" id="tt_statModalBadge" style="background:rgba(200,241,53,0.12);color:var(--accent)">0</span></div>
+      <button class="stat-modal-close" onclick="tt_closeStatModal()">✕</button>
+    </div>
+    <div class="stat-modal-body" id="tt_statModalBody"></div>
+  </div>
+</div>
+
+<!-- Add/Edit Task Modal TT -->
+<div class="modal-overlay" id="tt_modalOverlay">
+  <div class="modal">
+    <div class="modal-title"><span id="tt_modalTitleText">New Task</span><button class="modal-close" id="tt_closeModal">✕</button></div>
+    <div class="form-group"><label class="form-label">Task Title</label><input class="form-input" id="tt_taskTitle" placeholder="Enter task title..." /></div>
+    <div class="form-group"><label class="form-label">Category</label><div class="cat-selector" id="tt_catSelector"></div></div>
+    <!-- Dynamic sub-fields per category -->
+    <div id="tt_subFieldsWrap"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="tt_taskDate" /></div>
+      <div class="form-group"><label class="form-label">Time (optional)</label><input class="form-input" type="time" id="tt_taskTime" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">🔔 Remind Me Before</label>
+      <select class="form-select" id="tt_taskRemind">
+        <option value="0">At task time</option><option value="5">5 minutes before</option><option value="10" selected>10 minutes before</option>
+        <option value="15">15 minutes before</option><option value="30">30 minutes before</option><option value="60">1 hour before</option><option value="1440">1 day before</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="tt_taskNotes" rows="3" placeholder="Describe the task..."></textarea></div>
+    <div class="form-group"><label class="form-label">Priority</label>
+      <select class="form-select" id="tt_taskPriority"><option value="normal">Normal</option><option value="high">High Priority</option><option value="low">Low Priority</option></select>
+    </div>
+    <div class="form-group"><label class="form-label">Assign To</label><select class="assignee-select" id="tt_taskAssignee"><option value="">— Unassigned —</option></select></div>
+    <button class="btn-submit" id="tt_saveTask">Add to Calendar</button>
+  </div>
+</div>
+
+<!-- Task Detail Modal TT -->
+<div class="task-detail-overlay" id="tt_taskDetailOverlay">
+  <div class="task-detail-modal">
+    <div class="task-detail-header">
+      <div><div class="task-detail-title" id="tt_tdTitle"></div><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap" id="tt_tdMeta"></div></div>
+      <button class="task-detail-close" onclick="tt_closeTaskDetail()">✕</button>
+    </div>
+    <div class="task-detail-body">
+      <div class="detail-section">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><div class="detail-section-title">Created By</div><div id="tt_tdCreatedBy" style="font-size:0.82rem;color:var(--text-dim)">—</div></div>
+          <div><div class="detail-section-title">Assigned To</div><div id="tt_tdAssignedTo" style="font-size:0.82rem;color:var(--text-dim)">—</div></div>
+        </div>
+      </div>
+      <div class="detail-section" id="tt_tdSubFieldsSection" style="display:none">
+        <div class="detail-section-title">📑 Details</div>
+        <div id="tt_tdSubFields"></div>
+      </div>
+      <div class="detail-section" id="tt_tdNotesSection">
+        <div class="detail-section-title">Notes</div>
+        <div id="tt_tdNotes" style="font-size:0.82rem;color:var(--text-dim);line-height:1.6;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px"></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">🔗 Attached Links</div>
+        <div id="tt_tdLinks"></div>
+        <div class="link-input-row"><input class="link-input" id="tt_tdLinkInput" placeholder="https://..." /><button class="link-add-btn" onclick="tt_addLink()">+ Add Link</button></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">💬 Comments</div>
+        <div class="comment-list" id="tt_tdComments"></div>
+        <div class="comment-input-row"><textarea class="comment-input" id="tt_tdCommentInput" placeholder="Add a comment..." rows="2"></textarea><button class="comment-send" onclick="tt_addComment()">Send</button></div>
+      </div>
+      <div class="detail-section"><div class="detail-section-title">📋 Activity Log</div><div id="tt_tdActivity"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Analytics Modal TT -->
+<div class="analytics-overlay hidden" id="tt_analyticsOverlay">
+  <div class="analytics-modal">
+    <div class="analytics-header">
+      <div class="analytics-title">📊 Analytics & Reports</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="analytics-export-btn" onclick="tt_exportToExcel()">⬇ Excel</button>
+        <button class="analytics-close" onclick="tt_closeAnalytics()">✕</button>
+      </div>
+    </div>
+    <div class="analytics-tabs" style="overflow-x:auto;flex-wrap:nowrap">
+      <button class="atab active" id="tt_atab-category" onclick="tt_switchATab('category')">By Category</button>
+      <button class="atab" id="tt_atab-weekly" onclick="tt_switchATab('weekly')">Weekly</button>
+      <button class="atab" id="tt_atab-monthly" onclick="tt_switchATab('monthly')">Monthly</button>
+      <button class="atab" id="tt_atab-assignee" onclick="tt_switchATab('assignee')">👤 By Assignee</button>
+      <button class="atab" id="tt_atab-overdue" onclick="tt_switchATab('overdue')">⚠️ Overdue</button>
+    </div>
+    <div class="analytics-panel" id="tt_apanel-category"><div class="analytics-chart-wrap"><canvas id="tt_chartCategory"></canvas></div><div id="tt_categoryLegend" class="analytics-legend"></div></div>
+    <div class="analytics-panel hidden" id="tt_apanel-weekly"><div class="analytics-summary" id="tt_weeklySummary"></div><div class="analytics-chart-wrap"><canvas id="tt_chartWeekly"></canvas></div></div>
+    <div class="analytics-panel hidden" id="tt_apanel-monthly"><div class="analytics-summary" id="tt_monthlySummary"></div><div class="analytics-chart-wrap"><canvas id="tt_chartMonthly"></canvas></div></div>
+    <div class="analytics-panel hidden" id="tt_apanel-assignee"><div class="analytics-summary" id="tt_assigneeSummary"></div><div class="analytics-chart-wrap"><canvas id="tt_chartAssignee"></canvas></div><div id="tt_assigneeLegend" class="analytics-legend" style="margin-top:1rem"></div></div>
+    <div class="analytics-panel hidden" id="tt_apanel-overdue"><div class="analytics-summary" id="tt_overdueSummary"></div><div id="tt_overdueList" style="display:flex;flex-direction:column;gap:8px;margin-top:1rem"></div></div>
+  </div>
+</div>
+
+</div><!-- end #appTabTracking -->
+
+<!-- ─── APP TAB BAR ─── -->
+<div id="appTabBar" style="position:fixed;bottom:0;left:0;right:0;z-index:150;background:rgba(10,10,15,0.97);backdrop-filter:blur(20px);border-top:1px solid #2a2a3a;display:flex;align-items:stretch;height:40px;">
+  <button id="tabBtnCalendar" onclick="switchAppTab('calendar')" style="flex:1;background:none;border:none;border-right:1px solid #2a2a3a;color:#c8f135;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;border-bottom:2px solid #c8f135;">
     <span style="font-size:0.9rem">📅</span> CMG SocMed Activities &amp; Events Calendar
   </button>
-  <button id="tabBtnTracking" onclick="switchAppTab('tracking')" style="
-    flex: 1; background: none; border: none;
-    color: #6b6b80; font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 800; font-size: 0.78rem; letter-spacing: 0.08em;
-    text-transform: uppercase; cursor: pointer; transition: background 0.2s;
-    display: flex; align-items: center; justify-content: center; gap: 7px;
-    border-bottom: 2px solid transparent;
-  ">
+  <button id="tabBtnTracking" onclick="switchAppTab('tracking')" style="flex:1;background:none;border:none;color:#6b6b80;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;border-bottom:2px solid transparent;">
     <span style="font-size:0.9rem">📋</span> CMG Task Tracking
   </button>
 </div>
 
 <script>
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════
 // APP TAB SWITCHER
-// ═══════════════════════════════════════════
-let activeAppTab = 'calendar';
-
+// ═══════════════════════════════════════
 function switchAppTab(tab) {
-  activeAppTab = tab;
-
-  const calEl  = document.getElementById('appTabCalendar');
+  const calEl   = document.getElementById('appTabCalendar');
   const trackEl = document.getElementById('appTabTracking');
   const btnCal  = document.getElementById('tabBtnCalendar');
-  const btnTrack = document.getElementById('tabBtnTracking');
-
+  const btnTrack= document.getElementById('tabBtnTracking');
   if (tab === 'calendar') {
-    calEl.style.display  = 'block';
-    trackEl.style.display = 'none';
-    btnCal.style.color = '#c8f135';
-    btnCal.style.borderBottomColor = '#c8f135';
-    btnTrack.style.color = '#6b6b80';
-    btnTrack.style.borderBottomColor = 'transparent';
+    calEl.style.display = 'block'; trackEl.style.display = 'none';
+    btnCal.style.color = '#c8f135'; btnCal.style.borderBottomColor = '#c8f135';
+    btnTrack.style.color = '#6b6b80'; btnTrack.style.borderBottomColor = 'transparent';
   } else {
-    calEl.style.display  = 'none';
-    trackEl.style.display = 'block';
-    btnCal.style.color = '#6b6b80';
-    btnCal.style.borderBottomColor = 'transparent';
-    btnTrack.style.color = '#c8f135';
-    btnTrack.style.borderBottomColor = '#c8f135';
-    // Init tracking tab on first open
-    if (!window._trackingInited) {
-      window._trackingInited = true;
-      initTrackingTab();
-    } else {
-      // Always re-render categories and filter bar to reflect latest TT_CATEGORIES
-      tt_renderCategories();
-      tt_renderCatFilterBar();
-    }
+    calEl.style.display = 'none'; trackEl.style.display = 'block';
+    btnCal.style.color = '#6b6b80'; btnCal.style.borderBottomColor = 'transparent';
+    btnTrack.style.color = '#c8f135'; btnTrack.style.borderBottomColor = '#c8f135';
+    if (!window._ttInited) { window._ttInited = true; tt_initApp(); }
   }
 }
 </script>
 
 <script>
 // ═══════════════════════════════════════════════════════
-// CMG TASK TRACKING — FULL DUPLICATE ENGINE (tt_ prefix)
-// Uses Firestore collection: 'tasks_tracking'
+// CMG TASK TRACKING — COMPLETE ENGINE
+// Firestore collection: tasks_tracking
 // ═══════════════════════════════════════════════════════
 
-// ── CMG TASK TRACKING CATEGORIES ──
-const TT_CATEGORIES = [
-  {
-    id: 'emailer',
-    label: 'Emailer Campaign',
-    color: '#48dbfb',
-    icon: '📧',
-    subFields: []
-  },
-  {
-    id: 'marketing_materials',
-    label: 'Marketing Materials Generation',
-    color: '#a29bfe',
-    icon: '🎨',
-    subFields: []
-  },
-  {
-    id: 'printing',
-    label: 'Printing',
-    color: '#fd79a8',
-    icon: '🖨️',
-    subFields: []
-  },
-  {
-    id: 'website_update',
-    label: 'Website Update',
-    color: '#74b9ff',
-    icon: '🌐',
-    hasChildren: true,
-    subFields: [],
-    children: [
-      { id: 'website_dubeon',  label: 'Dubeon',  color: '#0984e3', icon: '🔵' },
-      { id: 'website_brilumd', label: 'Brilumd', color: '#6c5ce7', icon: '🟣' },
+// ── NEW CATEGORIES ──
+const TT_CATS = [
+  { id:'emailer',           label:'Emailer Campaign',               color:'#48dbfb', icon:'📧', subFields:[] },
+  { id:'mktg_materials',    label:'Marketing Materials Generation', color:'#a29bfe', icon:'🎨', subFields:[] },
+  { id:'printing',          label:'Printing',                       color:'#fd79a8', icon:'🖨️', subFields:[] },
+  { id:'website_update',    label:'Website Update',                 color:'#74b9ff', icon:'🌐', subFields:[],
+    children:[
+      { id:'website_dubeon',  label:'Dubeon',  color:'#0984e3', icon:'🔵' },
+      { id:'website_brilumd', label:'Brilumd', color:'#6c5ce7', icon:'🟣' },
     ]
   },
-  {
-    id: 'ecommerce_update',
-    label: 'E-commerce Update',
-    color: '#00b894',
-    icon: '🛒',
-    hasChildren: true,
-    subFields: [],
-    children: [
-      { id: 'ecommerce_dbstore', label: 'DB Store', color: '#00cec9', icon: '🏪' },
-      { id: 'ecommerce_brilumd', label: 'Brilumd',  color: '#55efc4', icon: '🟢' },
+  { id:'ecommerce_update',  label:'E-commerce Update',             color:'#00b894', icon:'🛒', subFields:[],
+    children:[
+      { id:'ecom_dbstore',  label:'DB Store', color:'#00cec9', icon:'🏪' },
+      { id:'ecom_brilumd',  label:'Brilumd',  color:'#55efc4', icon:'🟢' },
     ]
   },
-  {
-    id: 'ppt_request',
-    label: 'PPT Request',
-    color: '#e17055',
-    icon: '📊',
-    subFields: []
-  },
-  {
-    id: 'datasheet',
-    label: 'Datasheet Generation',
-    color: '#fdcb6e',
-    icon: '📄',
-    subFields: []
-  },
-  {
-    id: 'rfq_assist',
-    label: 'RFQ Assist',
-    color: '#b2bec3',
-    icon: '📋',
-    subFields: []
-  },
-  {
-    id: 'quotation',
-    label: 'Quotation Generation',
-    color: '#c8f135',
-    icon: '💰',
-    subFields: [
-      { key: 'companyName',     label: 'Company Name',      type: 'text',   placeholder: 'Enter company name' },
-      { key: 'quotationNumber', label: 'Quotation Number',  type: 'text',   placeholder: 'e.g. Q-2026-001' },
-      { key: 'amount',          label: 'Amount',            type: 'text',   placeholder: 'e.g. ₱50,000.00' },
+  { id:'ppt_request',       label:'PPT Request',                    color:'#e17055', icon:'📊', subFields:[] },
+  { id:'datasheet',         label:'Datasheet Generation',           color:'#fdcb6e', icon:'📄', subFields:[] },
+  { id:'rfq_assist',        label:'RFQ Assist',                     color:'#b2bec3', icon:'📋', subFields:[] },
+  { id:'quotation',         label:'Quotation Generation',           color:'#c8f135', icon:'💰',
+    subFields:[
+      { key:'companyName',     label:'Company Name',     type:'text', placeholder:'Enter company name' },
+      { key:'quotationNumber', label:'Quotation Number', type:'text', placeholder:'e.g. Q-2026-001' },
+      { key:'amount',          label:'Amount',           type:'text', placeholder:'e.g. ₱50,000.00' },
     ],
-    hasChildren: true,
-    children: [
-      { id: 'quotation_socmed',   label: 'Social Media Inquiry', color: '#c8f135', icon: '📱' },
-      { id: 'quotation_website',  label: 'Website Inquiry',      color: '#a8d800', icon: '🌐' },
+    children:[
+      { id:'quot_socmed',   label:'Social Media Inquiry', color:'#c8f135', icon:'📱' },
+      { id:'quot_website',  label:'Website Inquiry',      color:'#a8d800', icon:'🌐' },
     ]
   },
-  {
-    id: 'follow_up',
-    label: 'Follow Up Proposals',
-    color: '#ff9f43',
-    icon: '📨',
-    subFields: [
-      { key: 'companyName',     label: 'Company Name',      type: 'text',   placeholder: 'Enter company name' },
-      { key: 'quotationNumber', label: 'Quotation Number',  type: 'text',   placeholder: 'e.g. Q-2026-001' },
-      { key: 'amount',          label: 'Amount',            type: 'text',   placeholder: 'e.g. ₱50,000.00' },
-      { key: 'dateOfProposal',  label: 'Date of Proposal',  type: 'date',   placeholder: '' },
+  { id:'follow_up',         label:'Follow Up Proposals',            color:'#ff9f43', icon:'📨',
+    subFields:[
+      { key:'companyName',     label:'Company Name',     type:'text', placeholder:'Enter company name' },
+      { key:'quotationNumber', label:'Quotation Number', type:'text', placeholder:'e.g. Q-2026-001' },
+      { key:'amount',          label:'Amount',           type:'text', placeholder:'e.g. ₱50,000.00' },
+      { key:'dateOfProposal',  label:'Date of Proposal', type:'date', placeholder:'' },
     ]
   },
 ];
 
-// Flat list of all TT category IDs (including children)
-function tt_getAllCatIds() {
+// Helpers
+function tt_findCat(id) {
+  for (const c of TT_CATS) {
+    if (c.id === id) return c;
+    if (c.children) { const ch = c.children.find(x => x.id === id); if (ch) return ch; }
+  }
+  return TT_CATS[0];
+}
+function tt_findParent(id) {
+  for (const c of TT_CATS) { if (c.children && c.children.find(x => x.id === id)) return c; }
+  return null;
+}
+function tt_getSubFields(id) {
+  const parent = tt_findParent(id);
+  return (parent || tt_findCat(id)).subFields || [];
+}
+function tt_allIds() {
   const ids = [];
-  TT_CATEGORIES.forEach(c => {
-    ids.push(c.id);
-    if (c.children) c.children.forEach(ch => ids.push(ch.id));
-  });
+  TT_CATS.forEach(c => { ids.push(c.id); if (c.children) c.children.forEach(ch => ids.push(ch.id)); });
   return ids;
 }
 
-// Find a TT category by id (searches top-level and children)
-function tt_findCat(id) {
-  for (const c of TT_CATEGORIES) {
-    if (c.id === id) return c;
-    if (c.children) {
-      const ch = c.children.find(x => x.id === id);
-      if (ch) return { ...ch, subFields: c.subFields || [] };
-    }
-  }
-  return TT_CATEGORIES[TT_CATEGORIES.length - 1];
-}
-
-// Find the parent category of a child id
-function tt_findParentCat(id) {
-  for (const c of TT_CATEGORIES) {
-    if (c.children && c.children.find(x => x.id === id)) return c;
-  }
-  return null;
-}
-
-let tt_tasks = [];
-let tt_currentDate = new Date();
-let tt_selectedDate = null;
-let tt_selectedCat = 'emailer';
-let tt_editingTaskId = null;
-let tt_currentView = 'month';
-let tt_weekOffset = 0;
-let tt_inAppNotifs = [];
-let tt_materialLinks = [];
-let tt_notifTimers = {};
-let tt_chartCategory = null, tt_chartWeekly = null, tt_chartMonthly = null;
-let tt_chartAssignee = null, tt_chartPlatform = null, tt_chartTrend = null;
-let tt_currentReportPeriod = 'weekly';
+// ── State ──
+let tt_tasks = [], tt_currentDate = new Date(), tt_selectedDate = null;
+let tt_selectedCat = 'emailer', tt_editingTaskId = null, tt_currentView = 'month';
+let tt_weekOffset = 0, tt_inAppNotifs = [], tt_materialLinks = [];
 let tt_currentDetailTask = null;
+let tt_chartCat = null, tt_chartWeekly = null, tt_chartMonthly = null, tt_chartAssignee = null;
+const TT_CHART_OPT = { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, animation:{duration:400} };
 
-// ── Firestore ops (separate collection) ──
-async function tt_saveTask(d)       { return (await db.collection('tasks_tracking').add(d)).id; }
-async function tt_updateTask(id, d) { await db.collection('tasks_tracking').doc(id).update(d); }
-async function tt_deleteTask(id)    { await db.collection('tasks_tracking').doc(id).delete(); }
+// ── Firestore ──
+const tt_col = () => db.collection('tasks_tracking');
+const tt_matCol = () => db.collection('material_links_tracking');
+async function tt_saveTask(d)       { return (await tt_col().add(d)).id; }
+async function tt_updateTask(id, d) { await tt_col().doc(id).update(d); }
+async function tt_deleteTask(id)    { await tt_col().doc(id).delete(); }
 
-function tt_subscribeToTasks() {
-  db.collection('tasks_tracking').orderBy('date').onSnapshot(snap => {
+function tt_subscribe() {
+  tt_col().orderBy('date').onSnapshot(snap => {
     tt_tasks = snap.docs.map(d => ({ ...d.data(), _id: d.id }));
-    tt_renderCalendar();
-    if (tt_selectedDate) tt_renderPanel();
-    tt_renderStats();
-    tt_renderCategories();
+    tt_renderCal(); if (tt_selectedDate) tt_renderPanel();
+    tt_renderStats(); tt_renderSidebarCats();
   });
 }
-
-function tt_subscribeToMaterialLinks() {
-  db.collection('material_links_tracking').orderBy('createdAt').onSnapshot(snap => {
+function tt_subMaterials() {
+  tt_matCol().orderBy('createdAt').onSnapshot(snap => {
     tt_materialLinks = snap.docs.map(d => ({ ...d.data(), _id: d.id }));
-    tt_renderMaterialLinks();
+    tt_renderMatLinks();
   });
 }
 
-// ── PH Holidays (same data) ──
-const TT_PH_HOLIDAYS = typeof PH_HOLIDAYS !== 'undefined' ? PH_HOLIDAYS : {};
-
-// ── Calendar Rendering ──
-function tt_renderCalendar() {
-  const label = tt_currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-  const el = document.getElementById('tt_monthLabel');
-  if (el) el.textContent = label;
+// ── Calendar ──
+function tt_renderCal() {
+  const lbl = document.getElementById('tt_monthLabel');
+  if (lbl) lbl.textContent = tt_currentDate.toLocaleString('default', { month:'long', year:'numeric' });
+  const mob = document.getElementById('tt_mobMonthLabel');
+  if (mob) mob.textContent = lbl ? lbl.textContent : '';
+  tt_renderMiniCal();
   if (tt_currentView === 'month')  tt_renderMonthView();
   if (tt_currentView === 'week')   tt_renderWeekView();
   if (tt_currentView === 'agenda') tt_renderAgendaView();
-  tt_renderMiniCal();
-  // mobile
-  const mob = document.getElementById('tt_mobMonthLabel');
-  if (mob) mob.textContent = label;
-}
-
-function tt_getCatColor(catId) {
-  const c = tt_findCat(catId);
-  return c ? c.color : '#c8f135';
 }
 
 function tt_renderMonthView() {
-  const container = document.getElementById('tt_calGrid');
-  if (!container) return;
-  container.innerHTML = '';
-  const year = tt_currentDate.getFullYear(), month = tt_currentDate.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const prevDays = new Date(year, month, 0).getDate();
-  const todayKey = today();
-  const activeCat = document.getElementById('tt_catFilterBar')?._activeCat || null;
+  const grid = document.getElementById('tt_calGrid'); if (!grid) return;
+  grid.innerHTML = '';
+  const y = tt_currentDate.getFullYear(), m = tt_currentDate.getMonth();
+  const firstDay = new Date(y, m, 1).getDay(), daysInMonth = new Date(y, m+1, 0).getDate();
+  const prevDays = new Date(y, m, 0).getDate(), todayKey = today();
 
   for (let i = 0; i < firstDay; i++) {
     const d = prevDays - firstDay + i + 1;
-    const key = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const cell = tt_makeDayCell(key, d, true);
-    container.appendChild(cell);
+    const key = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    grid.appendChild(tt_makeCell(key, d, true));
   }
   for (let d = 1; d <= daysInMonth; d++) {
-    const key = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const cell = tt_makeDayCell(key, d, false);
+    const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cell = tt_makeCell(key, d, false);
     if (key === todayKey) cell.classList.add('today');
     if (key === tt_selectedDate) cell.classList.add('selected');
-    const h = TT_PH_HOLIDAYS[key];
+    const h = typeof PH_HOLIDAYS !== 'undefined' ? PH_HOLIDAYS[key] : null;
     if (h) cell.classList.add(h.type === 'regular' ? 'holiday-regular' : 'holiday-special');
-    container.appendChild(cell);
+    grid.appendChild(cell);
   }
-  // fill remaining
-  const total = firstDay + daysInMonth;
-  const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
-  for (let i = 1; i <= remaining; i++) {
-    const key = `${year}-${String(month+2).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-    const cell = tt_makeDayCell(key, i, true);
-    container.appendChild(cell);
+  const total = firstDay + daysInMonth, rem = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let i = 1; i <= rem; i++) {
+    const key = `${y}-${String(m+2).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    grid.appendChild(tt_makeCell(key, i, true));
   }
 }
 
-function tt_makeDayCell(key, dayNum, otherMonth) {
+function tt_makeCell(key, dayNum, otherMonth) {
   const cell = document.createElement('div');
   cell.className = 'cal-day' + (otherMonth ? ' other-month' : '');
   cell.onclick = () => tt_selectDay(key);
-
-  const numEl = document.createElement('div');
-  numEl.className = 'day-num';
-  numEl.textContent = dayNum;
+  const numEl = document.createElement('div'); numEl.className = 'day-num'; numEl.textContent = dayNum;
   cell.appendChild(numEl);
-
-  const h = TT_PH_HOLIDAYS[key];
+  const h = typeof PH_HOLIDAYS !== 'undefined' ? PH_HOLIDAYS[key] : null;
   if (h && !otherMonth) {
     const chip = document.createElement('div');
     chip.className = 'holiday-chip ' + (h.type === 'regular' ? 'regular' : 'special');
     chip.innerHTML = (h.type === 'regular' ? '🔴' : '🟡') + ' ' + h.name;
     cell.appendChild(chip);
   }
-
   const dayTasks = tt_tasks.filter(t => t.date === key);
-  const maxShow = 3;
-  dayTasks.slice(0, maxShow).forEach(t => {
+  dayTasks.slice(0, 3).forEach(t => {
     const cat = tt_findCat(t.category);
     const chip = document.createElement('div');
     chip.className = 'task-chip' + (t.done ? ' done' : '');
     chip.style.background = cat.color;
     chip.innerHTML = `<span class="chip-dot"></span><span class="chip-title">${t.title}</span>${t.done ? '<span class="done-tag">DONE</span>' : ''}`;
-    chip.onclick = (e) => { e.stopPropagation(); tt_openTaskDetail(t._id); };
+    chip.onclick = e => { e.stopPropagation(); tt_openDetail(t._id); };
     cell.appendChild(chip);
   });
-  if (dayTasks.length > maxShow) {
-    const more = document.createElement('div');
-    more.className = 'more-tasks';
-    more.textContent = `+${dayTasks.length - maxShow} more`;
-    cell.appendChild(more);
-  }
-
-  // mobile dot row
+  if (dayTasks.length > 3) { const m = document.createElement('div'); m.className = 'more-tasks'; m.textContent = `+${dayTasks.length-3} more`; cell.appendChild(m); }
   if (dayTasks.length > 0) {
-    const dotRow = document.createElement('div');
-    dotRow.className = 'mob-dot-row';
-    dayTasks.slice(0, 5).forEach(t => {
-      const dot = document.createElement('div');
-      dot.className = 'mob-dot';
-      dot.style.background = tt_getCatColor(t.category);
-      dotRow.appendChild(dot);
-    });
-    cell.appendChild(dotRow);
+    const dr = document.createElement('div'); dr.className = 'mob-dot-row';
+    dayTasks.slice(0,5).forEach(t => { const dot = document.createElement('div'); dot.className='mob-dot'; dot.style.background=tt_findCat(t.category).color; dr.appendChild(dot); });
+    cell.appendChild(dr);
   }
   return cell;
 }
 
 function tt_selectDay(key) {
   tt_selectedDate = key;
-  tt_renderCalendar();
+  tt_renderCal();
   if (typeof isMobile === 'function' && isMobile()) {
-    tt_renderMobDayPanel(key);
-    document.getElementById('tt_mobDayPanel')?.classList.add('open');
-  } else {
-    tt_renderPanel();
-  }
+    tt_renderMobPanel(key); document.getElementById('tt_mobDayPanel')?.classList.add('open');
+  } else { tt_renderPanel(); }
 }
 
 function tt_renderPanel() {
   const dateEl = document.getElementById('tt_panelDate');
   const subEl  = document.getElementById('tt_panelSub');
-  const tasksEl = document.getElementById('tt_panelTasks');
+  const tasksEl= document.getElementById('tt_panelTasks');
   if (!dateEl || !tt_selectedDate) return;
-
   const d = new Date(tt_selectedDate + 'T12:00:00');
-  dateEl.textContent = d.toLocaleString('default', { month: 'long', day: 'numeric' });
-  subEl.textContent = d.toLocaleString('default', { year: 'numeric', weekday: 'long' }).toUpperCase();
-
+  dateEl.textContent = d.toLocaleString('default', { month:'long', day:'numeric' });
+  subEl.textContent  = d.toLocaleString('default', { year:'numeric', weekday:'long' }).toUpperCase();
   const dayTasks = tt_tasks.filter(t => t.date === tt_selectedDate);
-  if (!dayTasks.length) {
-    tasksEl.innerHTML = `<div class="empty-day"><div class="empty-icon">📅</div><p>No tasks for this day</p></div>`;
-    return;
-  }
+  if (!dayTasks.length) { tasksEl.innerHTML = `<div class="empty-day"><div class="empty-icon">📅</div><p>No tasks for this day</p></div>`; return; }
   tasksEl.innerHTML = '';
   dayTasks.forEach(t => {
     const cat = tt_findCat(t.category);
-    const item = document.createElement('div');
-    item.className = 'task-item' + (t.done ? ' done' : '');
-    item.style.setProperty('--cat-color', cat.color);
-    item.style.cssText += `;--cat-color:${cat.color}`;
-    item.querySelector ? null : null;
+    const item = document.createElement('div'); item.className = 'task-item' + (t.done ? ' done' : '');
     item.innerHTML = `
       <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${cat.color};border-radius:3px 0 0 3px"></div>
       <div class="task-item-top">
         <div class="task-title">${t.title}</div>
         <div style="display:flex;gap:4px;align-items:center">
-          <div class="task-check ${t.done ? 'checked' : ''}" data-id="${t._id}">${t.done ? '✓' : ''}</div>
-          <button class="edit-btn" data-id="${t._id}" title="Edit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:3px 5px;border-radius:4px;font-size:0.85rem">✎</button>
-          <button class="del-btn" data-id="${t._id}" title="Delete" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:3px 5px;border-radius:4px;font-size:0.85rem">✕</button>
+          <div class="task-check ${t.done?'checked':''}" data-id="${t._id}">${t.done?'✓':''}</div>
+          <button class="edit-btn" data-id="${t._id}" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:3px 5px;border-radius:4px;">✎</button>
+          <button class="del-btn" data-id="${t._id}" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:3px 5px;border-radius:4px;">✕</button>
         </div>
       </div>
       <div class="task-meta">
         <span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span>
         ${t.time ? `<span class="task-time">⏰ ${t.time}</span>` : ''}
-        ${t.priority === 'high' ? `<span class="task-tag" style="background:#ff6b6b20;color:#ff6b6b">HIGH</span>` : ''}
+        ${t.priority==='high' ? `<span class="task-tag" style="background:#ff6b6b20;color:#ff6b6b">HIGH</span>` : ''}
         ${t.done ? `<span class="task-tag" style="background:rgba(46,204,113,0.15);color:#2ecc71">✓ DONE</span>` : `<span class="task-tag" style="background:rgba(192,57,43,0.12);color:#e74c3c">⏳ PENDING</span>`}
-        ${t.approval ? `<span class="task-tag" style="background:rgba(162,155,254,0.15);color:#a29bfe">🏷️ ${t.approval}</span>` : ''}
       </div>
-      ${t.notes ? `<div class="task-notes">${t.notes}</div>` : ''}
-    `;
+      ${t.notes ? `<div class="task-notes">${t.notes}</div>` : ''}`;
     item.querySelector('.task-check').onclick = async () => { await tt_updateTask(t._id, { done: !t.done }); };
     item.querySelector('.edit-btn').onclick = () => tt_openEditModal(t._id);
     item.querySelector('.del-btn').onclick = async () => { if (confirm('Delete this task?')) await tt_deleteTask(t._id); };
-    item.onclick = (e) => { if (!['task-check','edit-btn','del-btn'].some(c => e.target.closest?.('.'+c))) tt_openTaskDetail(t._id); };
+    item.onclick = e => { if (!e.target.closest('.task-check,.edit-btn,.del-btn')) tt_openDetail(t._id); };
     tasksEl.appendChild(item);
   });
 }
 
-function tt_renderMobDayPanel(key) {
+function tt_renderMobPanel(key) {
   const d = new Date(key + 'T12:00:00');
-  const el = document.getElementById('tt_mobPanelDate');
-  const sub = document.getElementById('tt_mobPanelSub');
-  if (el) el.textContent = d.toLocaleString('default', { month: 'long', day: 'numeric' });
-  if (sub) sub.textContent = d.toLocaleString('default', { year: 'numeric', weekday: 'long' }).toUpperCase();
-  const container = document.getElementById('tt_mobPanelTasks');
-  if (!container) return;
-  const dayTasks = tt_tasks.filter(t => t.date === key);
-  if (!dayTasks.length) {
-    container.innerHTML = `<div class="empty-day"><div class="empty-icon">📅</div><p>No tasks for this day</p></div>`;
-    return;
-  }
-  container.innerHTML = '';
-  dayTasks.forEach(t => {
+  const el = document.getElementById('tt_mobPanelDate'); if (el) el.textContent = d.toLocaleString('default', { month:'long', day:'numeric' });
+  const sub = document.getElementById('tt_mobPanelSub'); if (sub) sub.textContent = d.toLocaleString('default', { year:'numeric', weekday:'long' }).toUpperCase();
+  const cont = document.getElementById('tt_mobPanelTasks'); if (!cont) return;
+  const dt = tt_tasks.filter(t => t.date === key);
+  if (!dt.length) { cont.innerHTML = `<div class="empty-day"><div class="empty-icon">📅</div><p>No tasks</p></div>`; return; }
+  cont.innerHTML = '';
+  dt.forEach(t => {
     const cat = tt_findCat(t.category);
-    const item = document.createElement('div');
-    item.className = 'agenda-task';
-    item.innerHTML = `
-      <div class="agenda-task-bar" style="background:${cat.color}"></div>
-      <div class="agenda-task-content">
-        <div class="agenda-task-title">${t.title}</div>
-        <div class="agenda-task-meta">
-          <span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span>
-          ${t.time ? `<span class="task-time">⏰ ${t.time}</span>` : ''}
-          ${t.done ? `<span class="task-tag" style="background:rgba(46,204,113,0.15);color:#2ecc71">✓ DONE</span>` : ''}
-        </div>
-      </div>
-    `;
-    item.onclick = () => tt_openTaskDetail(t._id);
-    container.appendChild(item);
+    const row = document.createElement('div'); row.className = 'agenda-task';
+    row.innerHTML = `<div class="agenda-task-bar" style="background:${cat.color}"></div><div class="agenda-task-content"><div class="agenda-task-title">${t.title}</div><div class="agenda-task-meta"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span>${t.done ? `<span class="task-tag" style="background:rgba(46,204,113,0.15);color:#2ecc71">✓ DONE</span>` : ''}</div></div>`;
+    row.onclick = () => tt_openDetail(t._id);
+    cont.appendChild(row);
   });
 }
 
 function tt_renderMiniCal() {
-  const container = document.getElementById('tt_miniCalDays');
-  if (!container) return;
-  container.innerHTML = '';
-  const year = tt_currentDate.getFullYear(), month = tt_currentDate.getMonth();
-  const first = new Date(year, month, 1).getDay();
-  const last  = new Date(year, month + 1, 0).getDate();
-  const todayKey = today();
-  for (let i = 0; i < first; i++) {
-    const el = document.createElement('div'); el.className = 'mini-day other-month'; container.appendChild(el);
-  }
+  const cont = document.getElementById('tt_miniCalDays'); if (!cont) return;
+  cont.innerHTML = '';
+  const y = tt_currentDate.getFullYear(), m = tt_currentDate.getMonth();
+  const first = new Date(y, m, 1).getDay(), last = new Date(y, m+1, 0).getDate(), tk = today();
+  for (let i = 0; i < first; i++) { const el = document.createElement('div'); el.className = 'mini-day other-month'; cont.appendChild(el); }
   for (let d = 1; d <= last; d++) {
-    const key = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const el = document.createElement('div');
-    el.className = 'mini-day' + (key === todayKey ? ' today' : '') + (key === tt_selectedDate ? ' selected' : '') + (tt_tasks.some(t => t.date === key) ? ' has-tasks' : '');
-    el.textContent = d;
-    el.onclick = () => tt_selectDay(key);
-    container.appendChild(el);
+    el.className = 'mini-day' + (key===tk?' today':'') + (key===tt_selectedDate?' selected':'') + (tt_tasks.some(t=>t.date===key)?' has-tasks':'');
+    el.textContent = d; el.onclick = () => tt_selectDay(key);
+    cont.appendChild(el);
   }
 }
 
 function tt_renderStats() {
-  const year = tt_currentDate.getFullYear(), month = tt_currentDate.getMonth();
-  const mt = tt_tasks.filter(t => { const d = new Date(t.date); return d.getFullYear()===year && d.getMonth()===month; });
-  const done = mt.filter(t => t.done).length;
-  const pending = mt.filter(t => !t.done).length;
-  const pct = mt.length ? Math.round(done/mt.length*100) : 0;
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  const setW = (id, v) => { const el = document.getElementById(id); if (el) el.style.width = v; };
-  set('tt_statTotal', tt_tasks.length); set('tt_statDone', done); set('tt_statMonth', mt.length); set('tt_statPending', pending);
-  setW('tt_progressBar', pct + '%'); set('tt_progressPct', pct + '%');
-  set('tt_mStatTotal', tt_tasks.length); set('tt_mStatDone', done); set('tt_mStatMonth', mt.length); set('tt_mStatPending', pending);
-  setW('tt_mProgressBar', pct + '%'); set('tt_mProgressPct', pct + '%');
+  const y = tt_currentDate.getFullYear(), m = tt_currentDate.getMonth();
+  const mt = tt_tasks.filter(t => { const d = new Date(t.date); return d.getFullYear()===y && d.getMonth()===m; });
+  const done = mt.filter(t=>t.done).length, pct = mt.length ? Math.round(done/mt.length*100) : 0;
+  const s = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  const sw = (id,v) => { const el=document.getElementById(id); if(el) el.style.width=v; };
+  s('tt_statTotal', tt_tasks.length); s('tt_statDone', done); s('tt_statMonth', mt.length); s('tt_statPending', mt.filter(t=>!t.done).length);
+  sw('tt_progressBar', pct+'%'); s('tt_progressPct', pct+'%');
 }
 
-function tt_renderCategories() {
-  const container = document.getElementById('tt_catList');
-  if (!container) return;
-  container.innerHTML = '';
-  const year = tt_currentDate.getFullYear(), month = tt_currentDate.getMonth();
-  const mt = tt_tasks.filter(t => { const d = new Date(t.date); return d.getFullYear()===year && d.getMonth()===month; });
-  const label = tt_currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-  const el = document.getElementById('tt_catMonthLabel'); if (el) el.textContent = `— ${label}`;
+// ── SIDEBAR CATEGORIES ──
+function tt_renderSidebarCats() {
+  const cont = document.getElementById('tt_catList'); if (!cont) return;
+  cont.innerHTML = '';
+  const y = tt_currentDate.getFullYear(), m = tt_currentDate.getMonth();
+  const mt = tt_tasks.filter(t => { const d = new Date(t.date); return d.getFullYear()===y && d.getMonth()===m; });
+  const lbl = document.getElementById('tt_catMonthLabel');
+  if (lbl) lbl.textContent = `— ${tt_currentDate.toLocaleString('default',{month:'long',year:'numeric'})}`;
 
-  TT_CATEGORIES.forEach(cat => {
-    // Count includes children
-    const childIds = cat.children ? cat.children.map(c => c.id) : [];
-    const count = mt.filter(t => t.category === cat.id || childIds.includes(t.category)).length;
+  TT_CATS.forEach(cat => {
+    const childIds = (cat.children||[]).map(c=>c.id);
+    const count = mt.filter(t => t.category===cat.id || childIds.includes(t.category)).length;
     const item = document.createElement('div'); item.className = 'cat-item';
     item.innerHTML = `<div class="cat-dot" style="background:${cat.color};box-shadow:0 0 6px ${cat.color}60"></div><span class="cat-name">${cat.icon||''} ${cat.label}</span><span class="cat-count">${count}</span>`;
     item.onclick = () => tt_openCatModal(cat.id);
-    container.appendChild(item);
+    cont.appendChild(item);
     if (cat.children) {
       cat.children.forEach(ch => {
-        const chCount = mt.filter(t => t.category === ch.id).length;
+        const chCount = mt.filter(t=>t.category===ch.id).length;
         const sub = document.createElement('div'); sub.className = 'cat-sub-item';
         sub.innerHTML = `<span style="font-size:0.9rem">${ch.icon||'•'}</span><span style="color:${ch.color};flex:1">${ch.label}</span><span class="cat-count">${chCount}</span>`;
         sub.onclick = () => tt_openCatModal(ch.id);
-        container.appendChild(sub);
+        cont.appendChild(sub);
       });
     }
   });
 }
 
-// ── Category filter bar ──
-function tt_renderCatFilterBar() {
-  const bar = document.getElementById('tt_catFilterBar');
-  if (!bar) return;
-  bar._activeCat = null;
-  bar.innerHTML = '';
+// ── FILTER BAR ──
+function tt_renderFilterBar() {
+  const bar = document.getElementById('tt_catFilterBar'); if (!bar) return;
+  bar._active = null; bar.innerHTML = '';
   const allBtn = document.createElement('button');
   allBtn.className = 'cat-filter-btn active';
   allBtn.style.cssText = 'background:var(--accent);color:#0a0a0f;border-color:var(--accent)';
   allBtn.textContent = '+ All';
   allBtn.onclick = () => {
-    bar._activeCat = null;
+    bar._active = null;
     bar.querySelectorAll('.cat-filter-btn').forEach(b => { b.classList.remove('active'); b.style.background=''; b.style.color=''; b.style.borderColor=''; });
     allBtn.classList.add('active'); allBtn.style.background='var(--accent)'; allBtn.style.color='#0a0a0f'; allBtn.style.borderColor='var(--accent)';
     tt_renderMonthView();
   };
   bar.appendChild(allBtn);
-
-  // Add a button per top-level + child category
-  TT_CATEGORIES.forEach(cat => {
+  TT_CATS.forEach(cat => {
     const addBtn = (id, label, icon, color) => {
-      const btn = document.createElement('button');
-      btn.className = 'cat-filter-btn';
+      const btn = document.createElement('button'); btn.className = 'cat-filter-btn';
       btn.style.borderColor = color; btn.style.color = color;
-      btn.innerHTML = (icon ? `<span>${icon}</span> ` : '') + label;
+      btn.innerHTML = (icon?`<span>${icon}</span> `:'')+label;
       btn.onclick = () => {
-        bar._activeCat = id;
+        bar._active = id;
         bar.querySelectorAll('.cat-filter-btn').forEach(b => { b.classList.remove('active'); b.style.background=''; b.style.color=color; });
         allBtn.style.background=''; allBtn.style.color=''; allBtn.style.borderColor='';
-        btn.classList.add('active'); btn.style.background = color; btn.style.color = '#0a0a0f';
+        btn.classList.add('active'); btn.style.background=color; btn.style.color='#0a0a0f';
         tt_renderMonthView();
       };
       bar.appendChild(btn);
     };
     addBtn(cat.id, cat.label, cat.icon, cat.color);
-    if (cat.children) {
-      cat.children.forEach(ch => addBtn(ch.id, ch.label, ch.icon, ch.color));
-    }
+    if (cat.children) cat.children.forEach(ch => addBtn(ch.id, ch.label, ch.icon, ch.color));
   });
 }
 
-// ── Week View ──
-function tt_renderWeekView() {
-  const grid = document.getElementById('tt_weekGrid');
-  if (!grid) return;
-  const todayDate = new Date(); todayDate.setHours(0,0,0,0);
-  const startOfWeek = new Date(todayDate); startOfWeek.setDate(todayDate.getDate() - todayDate.getDay() + tt_weekOffset * 7);
-  const days = [];
-  for (let i = 0; i < 7; i++) { const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + i); days.push(d); }
-  const start = days[0], end = days[6];
-  const lbl = document.getElementById('tt_weekLabel');
-  if (lbl) lbl.textContent = `${start.toLocaleString('default',{month:'short',day:'numeric'})} – ${end.toLocaleString('default',{month:'short',day:'numeric',year:'numeric'})}`;
-  const hours = Array.from({length:24},(_,i)=>i);
-  grid.style.cssText = `display:grid;grid-template-columns:50px repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;min-width:600px`;
-  grid.innerHTML = '';
-  const corner = document.createElement('div'); corner.className='week-header-cell'; grid.appendChild(corner);
-  days.forEach(d => { const cell = document.createElement('div'); cell.className='week-header-cell'+(dateKey(d)===today()?' today-col':''); cell.innerHTML=`<div>${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]}</div><div style="font-size:1rem;font-weight:800">${d.getDate()}</div>`; grid.appendChild(cell); });
-  hours.forEach(h => {
-    const tl = document.createElement('div'); tl.className='week-time-label'; tl.textContent=h===0?'12a':h<12?h+'a':h===12?'12p':(h-12)+'p'; grid.appendChild(tl);
-    days.forEach(d => {
-      const key = dateKey(d);
-      const cell = document.createElement('div'); cell.className='week-cell'+(key===today()?' today-col':''); cell.onclick=()=>tt_selectDay(key);
-      const slotTasks = tt_tasks.filter(t => t.date===key && t.time && parseInt(t.time.split(':')[0])===h);
-      slotTasks.forEach(t => { const cat=tt_findCat(t.category); const chip=document.createElement('div'); chip.style.cssText=`background:${cat.color};color:#0a0a0f;font-size:0.6rem;padding:2px 5px;border-radius:3px;margin-bottom:2px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis`; chip.textContent=t.title; chip.onclick=(e)=>{e.stopPropagation();tt_openTaskDetail(t._id);}; cell.appendChild(chip); });
-      grid.appendChild(cell);
-    });
-  });
-}
-
-function tt_weekNav(dir) { tt_weekOffset += dir; tt_renderWeekView(); }
-window.tt_weekNav = tt_weekNav;
-
-// ── Agenda View ──
-function tt_renderAgendaView() {
-  const container = document.getElementById('tt_viewAgenda');
-  if (!container) return;
-  const todayKey = today();
-  const sorted = [...tt_tasks].sort((a,b)=>a.date.localeCompare(b.date));
-  const grouped = {};
-  sorted.forEach(t => { if (!grouped[t.date]) grouped[t.date]=[]; grouped[t.date].push(t); });
-  const dates = Object.keys(grouped).sort();
-  if (!dates.length) { container.innerHTML=`<div class="empty-day"><div class="empty-icon">📋</div><p>No tasks yet</p></div>`; return; }
-  container.innerHTML = '';
-  dates.forEach(date => {
-    const d = new Date(date+'T12:00:00'); const isToday = date===todayKey;
-    const section = document.createElement('div'); section.className='agenda-day';
-    section.innerHTML=`<div class="agenda-day-header"><div class="agenda-day-label${isToday?' today-label':''}">${d.toLocaleString('default',{weekday:'long',month:'long',day:'numeric'})}</div>${isToday?'<span class="task-tag" style="background:rgba(200,241,53,0.15);color:var(--accent)">TODAY</span>':''}<div class="agenda-day-line"></div><span class="agenda-day-sub">${grouped[date].length} task${grouped[date].length!==1?'s':''}</span></div>`;
-    grouped[date].forEach(t => {
-      const cat=tt_findCat(t.category);
-      const row=document.createElement('div'); row.className='agenda-task';
-      row.innerHTML=`<div class="agenda-task-bar" style="background:${cat.color}"></div><div class="agenda-task-content"><div class="agenda-task-title">${t.title}</div><div class="agenda-task-meta"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span>${t.time?`<span class="task-time">⏰ ${t.time}</span>`:''} ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.15);color:#2ecc71">✓ DONE</span>`:`<span class="task-tag" style="background:rgba(192,57,43,0.12);color:#e74c3c">⏳ PENDING</span>`}${t.priority==='high'?`<span class="task-tag" style="background:#ff6b6b20;color:#ff6b6b">HIGH</span>`:''}</div></div>`;
-      row.onclick=()=>tt_openTaskDetail(t._id);
-      section.appendChild(row);
-    });
-    container.appendChild(section);
-  });
-}
-
+// ── VIEWS ──
 function tt_switchView(v) {
   tt_currentView = v;
-  document.getElementById('tt_viewMonth').style.display = v==='month' ? '' : 'none';
-  document.getElementById('tt_viewWeek').style.display  = v==='week'  ? '' : 'none';
-  document.getElementById('tt_viewAgenda').style.display= v==='agenda'? '' : 'none';
+  document.getElementById('tt_viewMonth').style.display  = v==='month'  ? '' : 'none';
+  document.getElementById('tt_viewWeek').style.display   = v==='week'   ? '' : 'none';
+  document.getElementById('tt_viewAgenda').style.display = v==='agenda' ? '' : 'none';
   ['tt_vtMonth','tt_vtWeek','tt_vtAgenda'].forEach(id => document.getElementById(id)?.classList.remove('active'));
   document.getElementById(v==='month'?'tt_vtMonth':v==='week'?'tt_vtWeek':'tt_vtAgenda')?.classList.add('active');
   if (v==='week') tt_renderWeekView();
@@ -6111,611 +5588,419 @@ function tt_switchView(v) {
 }
 window.tt_switchView = tt_switchView;
 
-// ── Modal ──
-function tt_buildCatSelector() {
-  const container = document.getElementById('tt_catSelector');
-  if (!container) return;
-  container.innerHTML = '';
-
-  TT_CATEGORIES.forEach(cat => {
-    // Determine if this cat or any child is selected
-    const childIds = cat.children ? cat.children.map(c => c.id) : [];
-    const isActive = tt_selectedCat === cat.id || childIds.includes(tt_selectedCat);
-    const activeCat = isActive ? tt_findCat(tt_selectedCat) : null;
-
-    const btn = document.createElement('button');
-    btn.className = 'cat-btn' + (isActive && !childIds.includes(tt_selectedCat) ? ' active' : (isActive ? ' active' : ''));
-    if (isActive) { btn.style.borderColor = activeCat.color; btn.style.background = activeCat.color; btn.style.color = '#0a0a0f'; }
-    btn.innerHTML = `${cat.icon||''} ${cat.label}`;
-    btn.onclick = () => {
-      tt_selectedCat = cat.children ? cat.children[0].id : cat.id;
-      tt_buildCatSelector();
-      tt_updateSubFields();
-    };
-    container.appendChild(btn);
-  });
-
-  // If selected cat has children, show child picker
-  const parentCat = tt_findParentCat(tt_selectedCat);
-  if (parentCat && parentCat.children) {
-    const subLabel = document.createElement('div');
-    subLabel.className = 'social-sub-label';
-    subLabel.textContent = `Choose ${parentCat.label} Type`;
-    container.appendChild(subLabel);
-
-    const grid = document.createElement('div');
-    grid.className = 'platform-selector';
-    parentCat.children.forEach(ch => {
-      const btn = document.createElement('button');
-      btn.className = 'platform-btn' + (tt_selectedCat === ch.id ? ' active' : '');
-      btn.style.color = ch.color;
-      if (tt_selectedCat === ch.id) btn.style.borderColor = ch.color;
-      btn.innerHTML = `<span class="platform-icon">${ch.icon||'•'}</span><span class="platform-name">${ch.label}</span>`;
-      btn.onclick = () => { tt_selectedCat = ch.id; tt_buildCatSelector(); tt_updateSubFields(); };
-      grid.appendChild(btn);
+function tt_renderWeekView() {
+  const grid = document.getElementById('tt_weekGrid'); if (!grid) return;
+  const base = new Date(); base.setHours(0,0,0,0);
+  const sow = new Date(base); sow.setDate(base.getDate()-base.getDay()+tt_weekOffset*7);
+  const days = Array.from({length:7},(_,i)=>{ const d=new Date(sow); d.setDate(sow.getDate()+i); return d; });
+  const lbl = document.getElementById('tt_weekLabel');
+  if (lbl) lbl.textContent = `${days[0].toLocaleString('default',{month:'short',day:'numeric'})} – ${days[6].toLocaleString('default',{month:'short',day:'numeric',year:'numeric'})}`;
+  grid.style.cssText = 'display:grid;grid-template-columns:50px repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;min-width:600px';
+  grid.innerHTML = '';
+  const corner = document.createElement('div'); corner.className='week-header-cell'; grid.appendChild(corner);
+  days.forEach(d => { const c=document.createElement('div'); c.className='week-header-cell'+(dateKey(d)===today()?' today-col':''); c.innerHTML=`<div>${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]}</div><div style="font-size:1rem;font-weight:800">${d.getDate()}</div>`; grid.appendChild(c); });
+  for (let h=0; h<24; h++) {
+    const tl=document.createElement('div'); tl.className='week-time-label'; tl.textContent=h===0?'12a':h<12?h+'a':h===12?'12p':(h-12)+'p'; grid.appendChild(tl);
+    days.forEach(d => {
+      const key=dateKey(d), cell=document.createElement('div'); cell.className='week-cell'+(key===today()?' today-col':''); cell.onclick=()=>tt_selectDay(key);
+      tt_tasks.filter(t=>t.date===key&&t.time&&parseInt(t.time.split(':')[0])===h).forEach(t=>{const cat=tt_findCat(t.category);const chip=document.createElement('div');chip.style.cssText=`background:${cat.color};color:#0a0a0f;font-size:0.6rem;padding:2px 5px;border-radius:3px;margin-bottom:2px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis`;chip.textContent=t.title;chip.onclick=e=>{e.stopPropagation();tt_openDetail(t._id);};cell.appendChild(chip);});
+      grid.appendChild(cell);
     });
-    container.appendChild(grid);
+  }
+}
+function tt_weekNav(dir) { tt_weekOffset+=dir; tt_renderWeekView(); }
+window.tt_weekNav = tt_weekNav;
+
+function tt_renderAgendaView() {
+  const cont = document.getElementById('tt_viewAgenda'); if (!cont) return;
+  const sorted = [...tt_tasks].sort((a,b)=>a.date.localeCompare(b.date));
+  const grouped = {}; sorted.forEach(t => { if (!grouped[t.date]) grouped[t.date]=[]; grouped[t.date].push(t); });
+  const dates = Object.keys(grouped).sort();
+  if (!dates.length) { cont.innerHTML=`<div class="empty-day"><div class="empty-icon">📋</div><p>No tasks yet</p></div>`; return; }
+  cont.innerHTML = '';
+  dates.forEach(date => {
+    const d=new Date(date+'T12:00:00'), isToday=date===today();
+    const sec=document.createElement('div'); sec.className='agenda-day';
+    sec.innerHTML=`<div class="agenda-day-header"><div class="agenda-day-label${isToday?' today-label':''}">${d.toLocaleString('default',{weekday:'long',month:'long',day:'numeric'})}</div>${isToday?'<span class="task-tag" style="background:rgba(200,241,53,0.15);color:var(--accent)">TODAY</span>':''}<div class="agenda-day-line"></div><span class="agenda-day-sub">${grouped[date].length} task${grouped[date].length!==1?'s':''}</span></div>`;
+    grouped[date].forEach(t => {
+      const cat=tt_findCat(t.category), row=document.createElement('div'); row.className='agenda-task';
+      row.innerHTML=`<div class="agenda-task-bar" style="background:${cat.color}"></div><div class="agenda-task-content"><div class="agenda-task-title">${t.title}</div><div class="agenda-task-meta"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span>${t.time?`<span class="task-time">⏰ ${t.time}</span>`:''} ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.15);color:#2ecc71">✓ DONE</span>`:`<span class="task-tag" style="background:rgba(192,57,43,0.12);color:#e74c3c">⏳ PENDING</span>`}</div></div>`;
+      row.onclick=()=>tt_openDetail(t._id); sec.appendChild(row);
+    });
+    cont.appendChild(sec);
+  });
+}
+
+// ── CATEGORY SELECTOR (modal) ──
+function tt_buildCatSelector() {
+  const cont = document.getElementById('tt_catSelector'); if (!cont) return;
+  cont.innerHTML = '';
+  TT_CATS.forEach(cat => {
+    const childIds = (cat.children||[]).map(c=>c.id);
+    const isActive = tt_selectedCat===cat.id || childIds.includes(tt_selectedCat);
+    const btn = document.createElement('button'); btn.className='cat-btn'+(isActive?' active':'');
+    if (isActive) { btn.style.borderColor=cat.color; btn.style.background=cat.color; btn.style.color='#0a0a0f'; }
+    btn.innerHTML = `${cat.icon||''} ${cat.label}`;
+    btn.onclick = () => { tt_selectedCat = cat.children ? cat.children[0].id : cat.id; tt_buildCatSelector(); tt_updateSubFields(); };
+    cont.appendChild(btn);
+  });
+  const parent = tt_findParent(tt_selectedCat);
+  if (parent && parent.children) {
+    const lbl=document.createElement('div'); lbl.className='social-sub-label'; lbl.textContent=`Choose ${parent.label} Type`; cont.appendChild(lbl);
+    const pgrid=document.createElement('div'); pgrid.className='platform-selector';
+    parent.children.forEach(ch => {
+      const btn=document.createElement('button'); btn.className='platform-btn'+(tt_selectedCat===ch.id?' active':''); btn.style.color=ch.color;
+      if(tt_selectedCat===ch.id)btn.style.borderColor=ch.color;
+      btn.innerHTML=`<span class="platform-icon">${ch.icon||'•'}</span><span class="platform-name">${ch.label}</span>`;
+      btn.onclick=()=>{tt_selectedCat=ch.id;tt_buildCatSelector();tt_updateSubFields();}; pgrid.appendChild(btn);
+    });
+    cont.appendChild(pgrid);
   }
 }
 
-// Show/hide dynamic sub-fields based on selected category
 function tt_updateSubFields() {
-  const wrap = document.getElementById('tt_subFieldsWrap');
-  if (!wrap) return;
+  const wrap = document.getElementById('tt_subFieldsWrap'); if (!wrap) return;
   wrap.innerHTML = '';
-
-  // Find subFields from parent cat (subFields live on parent, even for children)
-  const cat = tt_findCat(tt_selectedCat);
-  const parentCat = tt_findParentCat(tt_selectedCat) || cat;
-  const subFields = parentCat.subFields || cat.subFields || [];
-
-  if (!subFields.length) { wrap.style.display = 'none'; return; }
-  wrap.style.display = 'block';
-
-  subFields.forEach(f => {
-    const group = document.createElement('div'); group.className = 'form-group';
-    group.innerHTML = `<label class="form-label">${f.label}</label>` +
-      (f.type === 'date'
-        ? `<input class="form-input" type="date" id="tt_sf_${f.key}" />`
-        : `<input class="form-input" type="text" id="tt_sf_${f.key}" placeholder="${f.placeholder||''}" />`);
-    wrap.appendChild(group);
+  const fields = tt_getSubFields(tt_selectedCat);
+  fields.forEach(f => {
+    const g=document.createElement('div'); g.className='form-group';
+    g.innerHTML=`<label class="form-label">${f.label}</label>`+(f.type==='date'?`<input class="form-input" type="date" id="tt_sf_${f.key}"/>`:`<input class="form-input" type="text" id="tt_sf_${f.key}" placeholder="${f.placeholder||''}"/>`);
+    wrap.appendChild(g);
   });
 }
 
-// Collect sub-field values
 function tt_collectSubFields() {
-  const cat = tt_findCat(tt_selectedCat);
-  const parentCat = tt_findParentCat(tt_selectedCat) || cat;
-  const subFields = parentCat.subFields || cat.subFields || [];
-  const data = {};
-  subFields.forEach(f => {
-    const el = document.getElementById(`tt_sf_${f.key}`);
-    if (el) data[f.key] = el.value;
-  });
+  const data = {}, fields = tt_getSubFields(tt_selectedCat);
+  fields.forEach(f => { const el=document.getElementById(`tt_sf_${f.key}`); if(el) data[f.key]=el.value; });
   return data;
 }
 
-// Populate sub-fields when editing
 function tt_populateSubFields(task) {
-  const cat = tt_findCat(task.category);
-  const parentCat = tt_findParentCat(task.category) || cat;
-  const subFields = parentCat.subFields || cat.subFields || [];
-  subFields.forEach(f => {
-    const el = document.getElementById(`tt_sf_${f.key}`);
-    if (el && task[f.key]) el.value = task[f.key];
-  });
+  const fields = tt_getSubFields(task.category);
+  fields.forEach(f => { const el=document.getElementById(`tt_sf_${f.key}`); if(el&&task[f.key]) el.value=task[f.key]; });
 }
 
+// ── STAT / CAT MODALS ──
+function tt_openStatModal(type) {
+  const configs = {
+    all:       {icon:'📋',label:'All Tasks',color:'#c8f135',filter:()=>[...tt_tasks]},
+    completed: {icon:'✅',label:'Completed This Month',color:'#2ecc71',filter:()=>{const y=tt_currentDate.getFullYear(),m=tt_currentDate.getMonth();return tt_tasks.filter(t=>{const d=new Date(t.date);return t.done&&d.getFullYear()===y&&d.getMonth()===m;});}},
+    month:     {icon:'📅',label:"This Month's Tasks",color:'#74b9ff',filter:()=>{const y=tt_currentDate.getFullYear(),m=tt_currentDate.getMonth();return tt_tasks.filter(t=>{const d=new Date(t.date);return d.getFullYear()===y&&d.getMonth()===m;});}},
+    pending:   {icon:'⏳',label:'Pending This Month',color:'#c0392b',filter:()=>{const y=tt_currentDate.getFullYear(),m=tt_currentDate.getMonth();return tt_tasks.filter(t=>{const d=new Date(t.date);return!t.done&&d.getFullYear()===y&&d.getMonth()===m;});}},
+  };
+  const cfg=configs[type]; if(!cfg) return;
+  const filtered=cfg.filter().sort((a,b)=>a.date.localeCompare(b.date));
+  document.getElementById('tt_statModalIcon').textContent=cfg.icon;
+  document.getElementById('tt_statModalTitle').textContent=cfg.label;
+  document.getElementById('tt_statModalBadge').textContent=filtered.length;
+  document.getElementById('tt_statModalBadge').style.cssText=`background:${cfg.color}20;color:${cfg.color}`;
+  const body=document.getElementById('tt_statModalBody');
+  if(!filtered.length){body.innerHTML=`<div class="stat-empty"><div class="e-icon">${cfg.icon}</div><p>No tasks found.</p></div>`;}
+  else{body.innerHTML='';filtered.forEach(t=>{const cat=tt_findCat(t.category);const ds=new Date(t.date+'T12:00:00').toLocaleString('default',{month:'short',day:'numeric',year:'numeric'});const item=document.createElement('div');item.className='stat-task-item'+(t.done?' done':'');item.innerHTML=`<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${cat.color};border-radius:3px 0 0 3px"></div><div class="stat-task-row"><div class="stat-task-title">${t.title}</div><div class="stat-task-date">📅 ${ds}</div></div><div class="stat-task-meta"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span>${t.time?`<span class="task-time">⏰ ${t.time}</span>`:''} ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.12);color:#2ecc71">✓ Done</span>`:''}</div>`;item.onclick=()=>{tt_closeStatModal();tt_selectDay(t.date);};body.appendChild(item);});}
+  document.getElementById('tt_statModalOverlay').classList.add('open');
+}
+function tt_closeStatModal(){document.getElementById('tt_statModalOverlay').classList.remove('open');}
+window.tt_openStatModal=tt_openStatModal; window.tt_closeStatModal=tt_closeStatModal;
+
+function tt_openCatModal(catId) {
+  const cat=tt_findCat(catId), parent=tt_findParent(catId);
+  const childIds=(cat.children||[]).map(c=>c.id);
+  const filtered=tt_tasks.filter(t=>t.category===catId||childIds.includes(t.category)).sort((a,b)=>a.date.localeCompare(b.date));
+  const label=parent?`${parent.label} › ${cat.label}`:cat.label;
+  document.getElementById('tt_statModalIcon').textContent=cat.icon||'📋';
+  document.getElementById('tt_statModalTitle').textContent=label;
+  document.getElementById('tt_statModalBadge').textContent=filtered.length;
+  document.getElementById('tt_statModalBadge').style.cssText=`background:${cat.color}20;color:${cat.color}`;
+  const body=document.getElementById('tt_statModalBody');
+  if(!filtered.length){body.innerHTML=`<div class="stat-empty"><div class="e-icon">${cat.icon||'📋'}</div><p>No tasks in <strong>${label}</strong> yet.</p></div>`;}
+  else{body.innerHTML='';filtered.forEach(t=>{const tc=tt_findCat(t.category);const ds=new Date(t.date+'T12:00:00').toLocaleString('default',{month:'short',day:'numeric',year:'numeric'});const item=document.createElement('div');item.className='stat-task-item'+(t.done?' done':'');item.innerHTML=`<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${tc.color};border-radius:3px 0 0 3px"></div><div class="stat-task-row"><div class="stat-task-title">${t.title}</div><div class="stat-task-date">📅 ${ds}</div></div><div class="stat-task-meta"><span class="task-tag" style="background:${tc.color}20;color:${tc.color}">${tc.icon||''}${tc.label}</span> ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.12);color:#2ecc71">✓ Done</span>`:''}</div>`;item.onclick=()=>{tt_closeStatModal();tt_selectDay(t.date);};body.appendChild(item);});}
+  document.getElementById('tt_statModalOverlay').classList.add('open');
+}
+window.tt_openCatModal=tt_openCatModal;
+
+// ── TASK DETAIL ──
+function tt_openDetail(taskId) {
+  const t=tt_tasks.find(x=>x._id===taskId); if(!t) return;
+  tt_currentDetailTask=t;
+  const cat=tt_findCat(t.category), parent=tt_findParent(t.category);
+  const catLabel=parent?`${parent.label} › ${cat.label}`:cat.label;
+  document.getElementById('tt_tdTitle').textContent=t.title;
+  const ds=new Date(t.date+'T12:00:00').toLocaleString('default',{month:'long',day:'numeric',year:'numeric'});
+  document.getElementById('tt_tdMeta').innerHTML=`<span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${catLabel}</span><span class="task-tag" style="background:var(--surface2);color:var(--text-dim)">📅 ${ds}</span>${t.time?`<span class="task-tag" style="background:var(--surface2);color:var(--text-dim)">⏰ ${t.time}</span>`:''} ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.15);color:#2ecc71">✓ DONE</span>`:`<span class="task-tag" style="background:rgba(192,57,43,0.12);color:#e74c3c">⏳ PENDING</span>`}`;
+  document.getElementById('tt_tdCreatedBy').textContent=t.createdByName||t.createdBy||'—';
+  document.getElementById('tt_tdAssignedTo').textContent=t.assignedTo||'— Unassigned —';
+  // Sub-fields
+  const fields=tt_getSubFields(t.category);
+  let sfHTML=''; fields.forEach(f=>{if(t[f.key])sfHTML+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);min-width:130px">${f.label}</span><span style="font-size:0.82rem;color:var(--text-dim);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px">${t[f.key]}</span></div>`;});
+  const sfSec=document.getElementById('tt_tdSubFieldsSection'),sfCont=document.getElementById('tt_tdSubFields');
+  if(sfSec&&sfCont){sfCont.innerHTML=sfHTML;sfSec.style.display=sfHTML?'':'none';}
+  // Notes
+  const ns=document.getElementById('tt_tdNotesSection'),ne=document.getElementById('tt_tdNotes');
+  if(t.notes){ns.style.display='';ne.textContent=t.notes;}else{ns.style.display='none';}
+  // Links
+  const le=document.getElementById('tt_tdLinks'); le.innerHTML='';
+  (t.links||[]).forEach((link,i)=>{const item=document.createElement('div');item.className='link-item';item.innerHTML=`<a href="${link}" target="_blank" class="link-url">${link}</a><button class="link-remove" onclick="tt_removeLink(${i})">✕</button>`;le.appendChild(item);});
+  document.getElementById('tt_tdLinkInput').value='';
+  // Comments
+  const ce=document.getElementById('tt_tdComments'); ce.innerHTML='';
+  (t.comments||[]).forEach(c=>{const init=(c.author||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);const item=document.createElement('div');item.className='comment-item';item.innerHTML=`<div class="comment-header"><div class="comment-avatar">${init}</div><div class="comment-author">${c.author||'Unknown'}</div><div class="comment-time">${new Date(c.time).toLocaleString()}</div></div><div class="comment-text">${c.text}</div>`;ce.appendChild(item);});
+  document.getElementById('tt_tdCommentInput').value='';
+  // Activity
+  const ae=document.getElementById('tt_tdActivity'); ae.innerHTML='';
+  (t.activity||[]).slice().reverse().forEach(a=>{const item=document.createElement('div');item.className='activity-item';item.innerHTML=`<span class="activity-icon">📌</span><span>${a.text}</span><span class="activity-time">${new Date(a.time).toLocaleString()}</span>`;ae.appendChild(item);});
+  document.getElementById('tt_taskDetailOverlay').classList.add('open');
+}
+function tt_closeTaskDetail(){document.getElementById('tt_taskDetailOverlay').classList.remove('open');tt_currentDetailTask=null;}
+window.tt_openDetail=tt_openDetail; window.tt_openTaskDetail=tt_openDetail; window.tt_closeTaskDetail=tt_closeTaskDetail;
+
+async function tt_addComment(){const inp=document.getElementById('tt_tdCommentInput');if(!inp||!tt_currentDetailTask)return;const text=inp.value.trim();if(!text)return;const c={author:currentUserProfile?.name||'Unknown',text,time:new Date().toISOString()};const comments=[...(tt_currentDetailTask.comments||[]),c];const activity=[...(tt_currentDetailTask.activity||[]),{text:`💬 Comment by ${c.author}`,time:c.time}];await tt_updateTask(tt_currentDetailTask._id,{comments,activity});inp.value='';}
+async function tt_addLink(){const inp=document.getElementById('tt_tdLinkInput');if(!inp||!tt_currentDetailTask)return;let url=inp.value.trim();if(!url)return;if(!url.startsWith('http'))url='https://'+url;const links=[...(tt_currentDetailTask.links||[]),url];await tt_updateTask(tt_currentDetailTask._id,{links});inp.value='';}
+async function tt_removeLink(idx){if(!tt_currentDetailTask)return;const links=(tt_currentDetailTask.links||[]).filter((_,i)=>i!==idx);await tt_updateTask(tt_currentDetailTask._id,{links});}
+window.tt_addComment=tt_addComment; window.tt_addLink=tt_addLink; window.tt_removeLink=tt_removeLink;
+
+// ── EDIT MODAL ──
 function tt_openEditModal(taskId) {
-  const t = tt_tasks.find(x => x._id === taskId); if (!t) return;
-  tt_editingTaskId = taskId;
-  document.getElementById('tt_modalTitleText').textContent = 'Edit Task';
-  document.getElementById('tt_saveTask').textContent = 'Save Changes';
-  document.getElementById('tt_taskTitle').value = t.title;
-  document.getElementById('tt_taskDate').value  = t.date;
-  document.getElementById('tt_taskTime').value  = t.time || '';
-  document.getElementById('tt_taskRemind').value = t.remind || '10';
-  document.getElementById('tt_taskNotes').value  = t.notes || '';
-  document.getElementById('tt_taskPriority').value = t.priority || 'normal';
-  document.getElementById('tt_taskApproval').value  = t.approval || '';
-  if (document.getElementById('tt_taskAssignee')) document.getElementById('tt_taskAssignee').value = t.assignedTo || '';
-  // Set category — default to emailer if unknown
-  tt_selectedCat = tt_getAllCatIds().includes(t.category) ? t.category : 'emailer';
-  tt_buildCatSelector();
-  tt_updateSubFields();
-  // Populate sub-fields after they're rendered
-  setTimeout(() => tt_populateSubFields(t), 50);
+  const t=tt_tasks.find(x=>x._id===taskId); if(!t) return;
+  tt_editingTaskId=taskId;
+  document.getElementById('tt_modalTitleText').textContent='Edit Task';
+  document.getElementById('tt_saveTask').textContent='Save Changes';
+  document.getElementById('tt_taskTitle').value=t.title;
+  document.getElementById('tt_taskDate').value=t.date;
+  document.getElementById('tt_taskTime').value=t.time||'';
+  document.getElementById('tt_taskRemind').value=t.remind||'10';
+  document.getElementById('tt_taskNotes').value=t.notes||'';
+  document.getElementById('tt_taskPriority').value=t.priority||'normal';
+  if(document.getElementById('tt_taskAssignee'))document.getElementById('tt_taskAssignee').value=t.assignedTo||'';
+  tt_selectedCat=tt_allIds().includes(t.category)?t.category:'emailer';
+  tt_buildCatSelector(); tt_updateSubFields();
+  setTimeout(()=>tt_populateSubFields(t), 50);
   document.getElementById('tt_modalOverlay').classList.add('open');
 }
 
-// ── Stat Modal ──
-function tt_openStatModal(type) {
-  const configs = {
-    all:       { icon:'📋', label:'All Tasks',            color:'#c8f135', filter:()=>[...tt_tasks] },
-    completed: { icon:'✅', label:'Completed This Month', color:'#2ecc71', filter:()=>{ const y=tt_currentDate.getFullYear(),m=tt_currentDate.getMonth(); return tt_tasks.filter(t=>{const d=new Date(t.date);return t.done&&d.getFullYear()===y&&d.getMonth()===m;}); } },
-    month:     { icon:'📅', label:"This Month's Tasks",  color:'#74b9ff', filter:()=>{ const y=tt_currentDate.getFullYear(),m=tt_currentDate.getMonth(); return tt_tasks.filter(t=>{const d=new Date(t.date);return d.getFullYear()===y&&d.getMonth()===m;}); } },
-    pending:   { icon:'⏳', label:'Pending This Month',  color:'#c0392b', filter:()=>{ const y=tt_currentDate.getFullYear(),m=tt_currentDate.getMonth(); return tt_tasks.filter(t=>{const d=new Date(t.date);return !t.done&&d.getFullYear()===y&&d.getMonth()===m;}); } },
-  };
-  const cfg = configs[type]; if (!cfg) return;
-  const filtered = cfg.filter().sort((a,b)=>a.date.localeCompare(b.date));
-  document.getElementById('tt_statModalIcon').textContent  = cfg.icon;
-  document.getElementById('tt_statModalTitle').textContent = cfg.label;
-  document.getElementById('tt_statModalBadge').textContent = filtered.length;
-  document.getElementById('tt_statModalBadge').style.background = cfg.color+'20';
-  document.getElementById('tt_statModalBadge').style.color = cfg.color;
-  const body = document.getElementById('tt_statModalBody');
-  if (!filtered.length) { body.innerHTML=`<div class="stat-empty"><div class="e-icon">${cfg.icon}</div><p>No tasks found.</p></div>`; }
-  else {
-    body.innerHTML = '';
-    filtered.forEach(t => {
-      const cat=tt_findCat(t.category);
-      const dateStr=new Date(t.date+'T12:00:00').toLocaleString('default',{month:'short',day:'numeric',year:'numeric'});
-      const item=document.createElement('div'); item.className='stat-task-item'+(t.done?' done':'');
-      item.innerHTML=`<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${cat.color};border-radius:3px 0 0 3px"></div><div class="stat-task-row"><div class="stat-task-title">${t.title}</div><div class="stat-task-date">📅 ${dateStr}</div></div><div class="stat-task-meta"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span>${t.time?`<span class="task-time">⏰ ${t.time}</span>`:''} ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.12);color:#2ecc71">✓ Done</span>`:''}</div>`;
-      item.onclick=()=>{ tt_closeStatModal(); tt_selectDay(t.date); };
-      body.appendChild(item);
-    });
-  }
-  document.getElementById('tt_statModalOverlay').classList.add('open');
-}
-function tt_closeStatModal() { document.getElementById('tt_statModalOverlay').classList.remove('open'); }
-window.tt_openStatModal = tt_openStatModal;
-window.tt_closeStatModal = tt_closeStatModal;
-
-function tt_openCatModal(catId) {
-  const cat = tt_findCat(catId);
-  const parentCat = tt_findParentCat(catId);
-  const childIds = cat.children ? cat.children.map(c => c.id) : [];
-  const filtered = tt_tasks.filter(t => t.category === catId || childIds.includes(t.category)).slice().sort((a,b)=>a.date.localeCompare(b.date));
-  const label = parentCat ? `${parentCat.label} › ${cat.label}` : cat.label;
-  const icon = cat.icon || '📋'; const color = cat.color || '#c8f135';
-  document.getElementById('tt_statModalIcon').textContent = icon;
-  document.getElementById('tt_statModalTitle').textContent = label;
-  document.getElementById('tt_statModalBadge').textContent = filtered.length;
-  document.getElementById('tt_statModalBadge').style.background = color + '20';
-  document.getElementById('tt_statModalBadge').style.color = color;
-  const body = document.getElementById('tt_statModalBody');
-  if (!filtered.length) {
-    body.innerHTML = `<div class="stat-empty"><div class="e-icon">${icon}</div><p>No tasks in <strong>${label}</strong> yet.</p></div>`;
-  } else {
-    body.innerHTML = '';
-    filtered.forEach(t => {
-      const tCat = tt_findCat(t.category);
-      const dateStr = new Date(t.date+'T12:00:00').toLocaleString('default',{month:'short',day:'numeric',year:'numeric'});
-      const item = document.createElement('div'); item.className = 'stat-task-item'+(t.done?' done':'');
-      item.innerHTML = `<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${tCat.color};border-radius:3px 0 0 3px"></div><div class="stat-task-row"><div class="stat-task-title">${t.title}</div><div class="stat-task-date">📅 ${dateStr}</div></div><div class="stat-task-meta"><span class="task-tag" style="background:${tCat.color}20;color:${tCat.color}">${tCat.icon||''}${tCat.label}</span>${t.time?`<span class="task-time">⏰ ${t.time}</span>`:''} ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.12);color:#2ecc71">✓ Done</span>`:`<span class="task-tag" style="background:rgba(192,57,43,0.12);color:#e74c3c">⏳ Pending</span>`}</div>`;
-      item.onclick = () => { tt_closeStatModal(); tt_selectDay(t.date); };
-      body.appendChild(item);
-    });
-  }
-  document.getElementById('tt_statModalOverlay').classList.add('open');
-}
-window.tt_openCatModal = tt_openCatModal;
-
-// ── Task Detail Modal ──
-function tt_openTaskDetail(taskId) {
-  const t = tt_tasks.find(x => x._id === taskId); if (!t) return;
-  tt_currentDetailTask = t;
-  document.getElementById('tt_tdTitle').textContent = t.title;
-  const cat = tt_findCat(t.category);
-  const parentCat = tt_findParentCat(t.category);
-  const catLabel = parentCat ? `${parentCat.label} › ${cat.label}` : cat.label;
-  const dateStr=new Date(t.date+'T12:00:00').toLocaleString('default',{month:'long',day:'numeric',year:'numeric'});
-  document.getElementById('tt_tdMeta').innerHTML=`<span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${catLabel}</span><span class="task-tag" style="background:var(--surface2);color:var(--text-dim)">📅 ${dateStr}</span>${t.time?`<span class="task-tag" style="background:var(--surface2);color:var(--text-dim)">⏰ ${t.time}</span>`:''} ${t.done?`<span class="task-tag" style="background:rgba(46,204,113,0.15);color:#2ecc71">✓ DONE</span>`:`<span class="task-tag" style="background:rgba(192,57,43,0.12);color:#e74c3c">⏳ PENDING</span>`}`;
-  document.getElementById('tt_tdCreatedBy').textContent = t.createdByName || t.createdBy || '—';
-  document.getElementById('tt_tdAssignedTo').textContent = t.assignedTo || '— Unassigned —';
-
-  // Sub-fields (Quotation Number, Amount, etc.)
-  const activeCat = parentCat || cat;
-  const subFields = activeCat.subFields || [];
-  let subFieldsHTML = '';
-  subFields.forEach(f => {
-    if (t[f.key]) {
-      subFieldsHTML += `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-        <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);min-width:120px">${f.label}</span>
-        <span style="font-size:0.82rem;color:var(--text-dim);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px">${t[f.key]}</span>
-      </div>`;
-    }
-  });
-  const sfSection = document.getElementById('tt_tdSubFieldsSection');
-  const sfContent = document.getElementById('tt_tdSubFields');
-  if (sfSection && sfContent) { sfContent.innerHTML = subFieldsHTML; sfSection.style.display = subFieldsHTML ? '' : 'none'; }
-
-  const notesSection = document.getElementById('tt_tdNotesSection');
-  const notesEl = document.getElementById('tt_tdNotes');
-  if (t.notes) { notesSection.style.display=''; notesEl.textContent=t.notes; } else { notesSection.style.display='none'; }
-  // Links
-  const linksEl = document.getElementById('tt_tdLinks'); linksEl.innerHTML='';
-  (t.links||[]).forEach((link,i) => {
-    const item=document.createElement('div'); item.className='link-item';
-    item.innerHTML=`<a href="${link}" target="_blank" class="link-url">${link}</a><button class="link-remove" onclick="tt_removeLink(${i})">✕</button>`;
-    linksEl.appendChild(item);
-  });
-  document.getElementById('tt_tdLinkInput').value='';
-  // Comments
-  const commentsEl = document.getElementById('tt_tdComments'); commentsEl.innerHTML='';
-  (t.comments||[]).forEach(c => {
-    const initials=(c.author||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-    const item=document.createElement('div'); item.className='comment-item';
-    item.innerHTML=`<div class="comment-header"><div class="comment-avatar">${initials}</div><div class="comment-author">${c.author||'Unknown'}</div><div class="comment-time">${new Date(c.time).toLocaleString()}</div></div><div class="comment-text">${c.text}</div>`;
-    commentsEl.appendChild(item);
-  });
-  document.getElementById('tt_tdCommentInput').value='';
-  // Activity
-  const actEl = document.getElementById('tt_tdActivity'); actEl.innerHTML='';
-  (t.activity||[]).slice().reverse().forEach(a => {
-    const item=document.createElement('div'); item.className='activity-item';
-    item.innerHTML=`<span class="activity-icon">📌</span><span>${a.text}</span><span class="activity-time">${new Date(a.time).toLocaleString()}</span>`;
-    actEl.appendChild(item);
-  });
-  document.getElementById('tt_taskDetailOverlay').classList.add('open');
-}
-function tt_closeTaskDetail() { document.getElementById('tt_taskDetailOverlay').classList.remove('open'); tt_currentDetailTask=null; }
-window.tt_openTaskDetail = tt_openTaskDetail;
-window.tt_closeTaskDetail = tt_closeTaskDetail;
-
-async function tt_addComment() {
-  const input=document.getElementById('tt_tdCommentInput'); if(!input||!tt_currentDetailTask)return;
-  const text=input.value.trim(); if(!text)return;
-  const comment={author:currentUserProfile?.name||'Unknown',text,time:new Date().toISOString()};
-  const comments=[...(tt_currentDetailTask.comments||[]),comment];
-  const activity=[...(tt_currentDetailTask.activity||[]),{text:`💬 Comment by ${comment.author}`,time:comment.time}];
-  await tt_updateTask(tt_currentDetailTask._id,{comments,activity});
-  input.value='';
-}
-window.tt_addComment = tt_addComment;
-
-async function tt_addLink() {
-  const input=document.getElementById('tt_tdLinkInput'); if(!input||!tt_currentDetailTask)return;
-  let url=input.value.trim(); if(!url)return;
-  if(!url.startsWith('http'))url='https://'+url;
-  const links=[...(tt_currentDetailTask.links||[]),url];
-  await tt_updateTask(tt_currentDetailTask._id,{links});
-  input.value='';
-}
-window.tt_addLink = tt_addLink;
-
-async function tt_removeLink(idx) {
-  if(!tt_currentDetailTask)return;
-  const links=(tt_currentDetailTask.links||[]).filter((_,i)=>i!==idx);
-  await tt_updateTask(tt_currentDetailTask._id,{links});
-}
-window.tt_removeLink = tt_removeLink;
-
-// ── Notifications ──
-function tt_addInAppNotif(title, body, date) {
-  tt_inAppNotifs.unshift({title,body,date,time:new Date().toISOString(),read:false});
-  tt_renderNotifDropdown();
-}
-function tt_renderNotifDropdown() {
-  const badge=document.getElementById('tt_notifBadge'); const list=document.getElementById('tt_notifList');
+// ── NOTIFICATIONS ──
+function tt_addNotif(title,body,date){tt_inAppNotifs.unshift({title,body,date,time:new Date().toISOString(),read:false});tt_renderNotifDrop();}
+function tt_renderNotifDrop(){
+  const badge=document.getElementById('tt_notifBadge'),list=document.getElementById('tt_notifList');
   const unread=tt_inAppNotifs.filter(n=>!n.read).length;
   if(badge){badge.textContent=unread;badge.classList.toggle('show',unread>0);}
   if(!list)return;
   if(!tt_inAppNotifs.length){list.innerHTML='<div class="notif-empty">No notifications yet</div>';return;}
   list.innerHTML='';
-  tt_inAppNotifs.slice(0,20).forEach((n,i)=>{
-    const item=document.createElement('div'); item.className='notif-item'+(n.read?'':' unread');
-    item.innerHTML=`<span class="notif-item-icon">🔔</span><div class="notif-item-text"><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;margin-bottom:2px">${n.title}</div><div>${n.body||''}</div></div><span class="notif-item-time">${new Date(n.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>`;
-    item.onclick=()=>{tt_inAppNotifs[i].read=true;tt_renderNotifDropdown();if(n.date)tt_selectDay(n.date);};
-    list.appendChild(item);
-  });
+  tt_inAppNotifs.slice(0,20).forEach((n,i)=>{const item=document.createElement('div');item.className='notif-item'+(n.read?'':' unread');item.innerHTML=`<span class="notif-item-icon">🔔</span><div class="notif-item-text"><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;margin-bottom:2px">${n.title}</div><div>${n.body||''}</div></div><span class="notif-item-time">${new Date(n.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>`;item.onclick=()=>{tt_inAppNotifs[i].read=true;tt_renderNotifDrop();if(n.date)tt_selectDay(n.date);};list.appendChild(item);});
 }
-function tt_toggleNotifDropdown() {
-  const dd=document.getElementById('tt_notifDropdown'); if(!dd)return;
-  dd.classList.toggle('open');
-  if(dd.classList.contains('open')){tt_inAppNotifs.forEach(n=>n.read=true);tt_renderNotifDropdown();}
-}
-function tt_clearAllNotifs() { tt_inAppNotifs=[]; tt_renderNotifDropdown(); document.getElementById('tt_notifDropdown')?.classList.remove('open'); }
+function tt_toggleNotifDropdown(){const dd=document.getElementById('tt_notifDropdown');if(!dd)return;dd.classList.toggle('open');if(dd.classList.contains('open')){tt_inAppNotifs.forEach(n=>n.read=true);tt_renderNotifDrop();}}
+function tt_clearAllNotifs(){tt_inAppNotifs=[];tt_renderNotifDrop();document.getElementById('tt_notifDropdown')?.classList.remove('open');}
 window.tt_toggleNotifDropdown=tt_toggleNotifDropdown; window.tt_clearAllNotifs=tt_clearAllNotifs;
 
-// ── Materials Generation ──
-function tt_renderMaterialLinks() {
-  const container=document.getElementById('tt_matLinkList'); if(!container)return;
-  if(!tt_materialLinks.length){container.innerHTML=`<div style="font-size:0.72rem;color:var(--text-muted);text-align:center;padding:6px 0">No links yet.</div>`;return;}
-  container.innerHTML='';
-  tt_materialLinks.forEach(item=>{
-    const el=document.createElement('div'); el.style.cssText=`display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;`;
-    el.innerHTML=`<span style="font-size:0.95rem;flex-shrink:0">🎨</span><a href="${item.url}" target="_blank" rel="noopener" style="flex:1;font-family:'Syne',sans-serif;font-weight:600;font-size:0.75rem;color:var(--accent3);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${item.url}">${item.title}</a><button onclick="tt_deleteMaterialLink('${item._id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem;padding:2px 4px;">✕</button>`;
-    container.appendChild(el);
-  });
-}
+// ── MATERIALS ──
+function tt_renderMatLinks(){const cont=document.getElementById('tt_matLinkList');if(!cont)return;if(!tt_materialLinks.length){cont.innerHTML=`<div style="font-size:0.72rem;color:var(--text-muted);text-align:center;padding:6px 0">No links yet.</div>`;return;}cont.innerHTML='';tt_materialLinks.forEach(item=>{const el=document.createElement('div');el.style.cssText='display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;';el.innerHTML=`<span>🎨</span><a href="${item.url}" target="_blank" rel="noopener" style="flex:1;font-family:'Syne',sans-serif;font-weight:600;font-size:0.75rem;color:var(--accent3);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${item.url}">${item.title}</a><button onclick="tt_deleteMat('${item._id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem;">✕</button>`;cont.appendChild(el);});}
 function tt_showMatAddForm(){document.getElementById('tt_matAddForm').style.display='flex';document.getElementById('tt_matAddBtn').style.display='none';document.getElementById('tt_matLinkTitle').focus();}
 function tt_cancelMaterialLink(){document.getElementById('tt_matAddForm').style.display='none';document.getElementById('tt_matAddBtn').style.display='flex';document.getElementById('tt_matLinkTitle').value='';document.getElementById('tt_matLinkUrl').value='';}
-async function tt_saveMaterialLink(){
-  const title=document.getElementById('tt_matLinkTitle').value.trim(); let url=document.getElementById('tt_matLinkUrl').value.trim();
-  if(!title||!url){alert('Please enter both a title and a URL.');return;} if(!url.startsWith('http'))url='https://'+url;
-  await db.collection('material_links_tracking').add({title,url,addedBy:currentUserProfile?.name||'Unknown',createdAt:new Date().toISOString()});
-  tt_cancelMaterialLink();
-}
-async function tt_deleteMaterialLink(id){if(!confirm('Remove this link?'))return;await db.collection('material_links_tracking').doc(id).delete();}
-window.tt_showMatAddForm=tt_showMatAddForm; window.tt_cancelMaterialLink=tt_cancelMaterialLink; window.tt_saveMaterialLink=tt_saveMaterialLink; window.tt_deleteMaterialLink=tt_deleteMaterialLink;
+async function tt_saveMaterialLink(){const title=document.getElementById('tt_matLinkTitle').value.trim();let url=document.getElementById('tt_matLinkUrl').value.trim();if(!title||!url){alert('Please enter both a title and a URL.');return;}if(!url.startsWith('http'))url='https://'+url;await tt_matCol().add({title,url,addedBy:currentUserProfile?.name||'Unknown',createdAt:new Date().toISOString()});tt_cancelMaterialLink();}
+async function tt_deleteMat(id){if(!confirm('Remove this link?'))return;await tt_matCol().doc(id).delete();}
+window.tt_showMatAddForm=tt_showMatAddForm; window.tt_cancelMaterialLink=tt_cancelMaterialLink; window.tt_saveMaterialLink=tt_saveMaterialLink; window.tt_deleteMat=tt_deleteMat;
 
-// ── Populate Assignee ──
-function tt_populateAssigneeDropdown() {
-  const select=document.getElementById('tt_taskAssignee'); if(!select)return;
-  db.collection('users').get().then(snap=>{
-    select.innerHTML='<option value="">— Unassigned —</option>';
-    snap.docs.forEach(d=>{const u=d.data();if(u.status==='approved'){const opt=document.createElement('option');opt.value=u.name;opt.textContent=u.name+(u.username?` (@${u.username})`:``);select.appendChild(opt);}});
-  }).catch(()=>{});
-}
+// ── ASSIGNEE ──
+function tt_populateAssignee(){const sel=document.getElementById('tt_taskAssignee');if(!sel)return;db.collection('users').get().then(snap=>{sel.innerHTML='<option value="">— Unassigned —</option>';snap.docs.forEach(d=>{const u=d.data();if(u.status==='approved'){const o=document.createElement('option');o.value=u.name;o.textContent=u.name+(u.username?` (@${u.username})`:'');sel.appendChild(o);}});}).catch(()=>{});}
 
-// ── Analytics ──
-const TT_CHART_DEFAULTS = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, animation:{duration:400} };
-
-function tt_openAnalytics() {
-  document.getElementById('tt_analyticsOverlay').classList.remove('hidden');
-  tt_switchATab('category');
-}
-function tt_closeAnalytics() { document.getElementById('tt_analyticsOverlay').classList.add('hidden'); }
+// ── ANALYTICS ──
+function tt_openAnalytics(){document.getElementById('tt_analyticsOverlay').classList.remove('hidden');tt_switchATab('category');}
+function tt_closeAnalytics(){document.getElementById('tt_analyticsOverlay').classList.add('hidden');}
 window.tt_openAnalytics=tt_openAnalytics; window.tt_closeAnalytics=tt_closeAnalytics;
 
-function tt_switchATab(tab) {
-  ['category','weekly','monthly','assignee','platform','overdue','trend'].forEach(t=>{
+function tt_switchATab(tab){
+  ['category','weekly','monthly','assignee','overdue'].forEach(t=>{
     document.getElementById(`tt_atab-${t}`)?.classList.toggle('active',t===tab);
     document.getElementById(`tt_apanel-${t}`)?.classList.toggle('hidden',t!==tab);
   });
-  if(tab==='category') tt_renderCategoryChart();
-  if(tab==='weekly')   tt_renderWeeklyChart();
-  if(tab==='monthly')  tt_renderMonthlyChart();
-  if(tab==='assignee') tt_renderAssigneeChart();
-  if(tab==='platform') tt_renderPlatformChart();
-  if(tab==='overdue')  tt_renderOverdueReport();
-  if(tab==='trend')    tt_resetTrendDates();
+  if(tab==='category')tt_chartCats();
+  if(tab==='weekly')tt_chartWeek();
+  if(tab==='monthly')tt_chartMonth();
+  if(tab==='assignee')tt_chartAssign();
+  if(tab==='overdue')tt_renderOverdue();
 }
 window.tt_switchATab=tt_switchATab;
 
-function tt_renderCategoryChart() {
-  if(tt_chartCategory)tt_chartCategory.destroy();
-  const data=TT_CATEGORIES.map(cat=>{const childIds=(cat.children||[]).map(c=>c.id);const count=tt_tasks.filter(t=>t.category===cat.id||childIds.includes(t.category)).length;return{label:cat.label,count,color:cat.color};});
-  const ctx=document.getElementById('tt_chartCategory')?.getContext('2d'); if(!ctx)return;
-  tt_chartCategory=new Chart(ctx,{type:'doughnut',data:{labels:data.map(d=>d.label),datasets:[{data:data.map(d=>d.count),backgroundColor:data.map(d=>d.color+'cc'),borderColor:'#0a0a0f',borderWidth:2}]},options:{...TT_CHART_DEFAULTS,plugins:{legend:{display:true,labels:{color:'#9090aa',font:{size:11}}}}}});
+const TT_CO = {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#9090aa',font:{size:11}}}},animation:{duration:400}};
+
+function tt_chartCats(){
+  if(tt_chartCat)tt_chartCat.destroy();
+  const data=TT_CATS.map(c=>{const cids=(c.children||[]).map(x=>x.id);const count=tt_tasks.filter(t=>t.category===c.id||cids.includes(t.category)).length;return{label:c.label,count,color:c.color};});
+  const ctx=document.getElementById('tt_chartCategory')?.getContext('2d');if(!ctx)return;
+  tt_chartCat=new Chart(ctx,{type:'doughnut',data:{labels:data.map(d=>d.label),datasets:[{data:data.map(d=>d.count),backgroundColor:data.map(d=>d.color+'cc'),borderColor:'#0a0a0f',borderWidth:2}]},options:{...TT_CO}});
   document.getElementById('tt_categoryLegend').innerHTML=data.map(d=>`<div class="legend-item"><div class="legend-dot" style="background:${d.color}"></div><span class="legend-label">${d.label}</span><span class="legend-val" style="color:${d.color}">${d.count}</span></div>`).join('');
 }
 
-function tt_renderWeeklyChart() {
+function tt_chartWeek(){
   if(tt_chartWeekly)tt_chartWeekly.destroy();
-  const weeks=[]; const now=new Date();
-  for(let i=11;i>=0;i--){const start=new Date(now);start.setDate(now.getDate()-now.getDay()-i*7);start.setHours(0,0,0,0);const end=new Date(start);end.setDate(start.getDate()+6);const wt=tt_tasks.filter(t=>{const d=new Date(t.date+'T12:00:00');return d>=start&&d<=end;});weeks.push({label:`W${12-i}`,total:wt.length,done:wt.filter(t=>t.done).length});}
+  const now=new Date(),weeks=[];
+  for(let i=11;i>=0;i--){const s=new Date(now);s.setDate(now.getDate()-now.getDay()-i*7);s.setHours(0,0,0,0);const e=new Date(s);e.setDate(s.getDate()+6);const wt=tt_tasks.filter(t=>{const d=new Date(t.date+'T12:00:00');return d>=s&&d<=e;});weeks.push({label:`W${12-i}`,total:wt.length,done:wt.filter(t=>t.done).length});}
   const done=weeks.reduce((s,w)=>s+w.done,0),total=weeks.reduce((s,w)=>s+w.total,0);
   document.getElementById('tt_weeklySummary').innerHTML=`<div class="asummary-card"><div class="asummary-val" style="color:var(--accent)">${total}</div><div class="asummary-label">12-Week Total</div></div><div class="asummary-card"><div class="asummary-val" style="color:#2ecc71">${done}</div><div class="asummary-label">Completed</div></div><div class="asummary-card"><div class="asummary-val" style="color:#74b9ff">${total?Math.round(done/total*100):0}%</div><div class="asummary-label">Rate</div></div>`;
-  const ctx=document.getElementById('tt_chartWeekly')?.getContext('2d'); if(!ctx)return;
-  tt_chartWeekly=new Chart(ctx,{type:'bar',data:{labels:weeks.map(w=>w.label),datasets:[{label:'Completed',data:weeks.map(w=>w.done),backgroundColor:'#c8f135cc',borderRadius:4},{label:'Pending',data:weeks.map(w=>w.total-w.done),backgroundColor:'#c8f13533',borderRadius:4}]},options:{...TT_CHART_DEFAULTS,plugins:{legend:{display:true,labels:{color:'#9090aa',font:{size:11}}}},scales:{x:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'}},y:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'},beginAtZero:true}}}});
+  const ctx=document.getElementById('tt_chartWeekly')?.getContext('2d');if(!ctx)return;
+  tt_chartWeekly=new Chart(ctx,{type:'bar',data:{labels:weeks.map(w=>w.label),datasets:[{label:'Completed',data:weeks.map(w=>w.done),backgroundColor:'#c8f135cc',borderRadius:4},{label:'Pending',data:weeks.map(w=>w.total-w.done),backgroundColor:'#c8f13533',borderRadius:4}]},options:{...TT_CO,scales:{x:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'}},y:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'},beginAtZero:true}}}});
 }
 
-function tt_renderMonthlyChart() {
+function tt_chartMonth(){
   if(tt_chartMonthly)tt_chartMonthly.destroy();
-  const months=[]; const now=new Date();
+  const now=new Date(),months=[];
   for(let i=11;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);const mt=tt_tasks.filter(t=>{const td=new Date(t.date+'T12:00:00');return td.getFullYear()===d.getFullYear()&&td.getMonth()===d.getMonth();});months.push({label:d.toLocaleString('default',{month:'short'}),total:mt.length,done:mt.filter(t=>t.done).length});}
   const done=months.reduce((s,m)=>s+m.done,0),total=months.reduce((s,m)=>s+m.total,0);
   document.getElementById('tt_monthlySummary').innerHTML=`<div class="asummary-card"><div class="asummary-val" style="color:var(--accent)">${total}</div><div class="asummary-label">12-Month Total</div></div><div class="asummary-card"><div class="asummary-val" style="color:#2ecc71">${done}</div><div class="asummary-label">Completed</div></div><div class="asummary-card"><div class="asummary-val" style="color:#74b9ff">${total?Math.round(done/total*100):0}%</div><div class="asummary-label">Rate</div></div>`;
-  const ctx=document.getElementById('tt_chartMonthly')?.getContext('2d'); if(!ctx)return;
-  tt_chartMonthly=new Chart(ctx,{type:'bar',data:{labels:months.map(m=>m.label),datasets:[{label:'Completed',data:months.map(m=>m.done),backgroundColor:'rgba(200,241,53,0.7)',borderRadius:4},{label:'Pending',data:months.map(m=>m.total-m.done),backgroundColor:'rgba(200,241,53,0.2)',borderRadius:4}]},options:{...TT_CHART_DEFAULTS,plugins:{legend:{display:true,labels:{color:'#9090aa',font:{size:11}}}},scales:{x:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'}},y:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'},beginAtZero:true}}}});
+  const ctx=document.getElementById('tt_chartMonthly')?.getContext('2d');if(!ctx)return;
+  tt_chartMonthly=new Chart(ctx,{type:'bar',data:{labels:months.map(m=>m.label),datasets:[{label:'Completed',data:months.map(m=>m.done),backgroundColor:'rgba(200,241,53,0.7)',borderRadius:4},{label:'Pending',data:months.map(m=>m.total-m.done),backgroundColor:'rgba(200,241,53,0.2)',borderRadius:4}]},options:{...TT_CO,scales:{x:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'}},y:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'},beginAtZero:true}}}});
 }
 
-function tt_renderAssigneeChart() {
+function tt_chartAssign(){
   if(tt_chartAssignee)tt_chartAssignee.destroy();
   const map={};tt_tasks.forEach(t=>{const n=t.assignedTo||'Unassigned';if(!map[n])map[n]={total:0,done:0};map[n].total++;if(t.done)map[n].done++;});
   const entries=Object.entries(map).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
   const done=Object.values(map).reduce((s,v)=>s+v.done,0),total=Object.values(map).reduce((s,v)=>s+v.total,0);
   document.getElementById('tt_assigneeSummary').innerHTML=`<div class="asummary-card"><div class="asummary-val" style="color:var(--accent)">${Object.keys(map).length}</div><div class="asummary-label">Team Members</div></div><div class="asummary-card"><div class="asummary-val" style="color:#2ecc71">${done}</div><div class="asummary-label">Completed</div></div><div class="asummary-card"><div class="asummary-val" style="color:#74b9ff">${total?Math.round(done/total*100):0}%</div><div class="asummary-label">Rate</div></div>`;
-  const ctx=document.getElementById('tt_chartAssignee')?.getContext('2d'); if(!ctx)return;
+  const ctx=document.getElementById('tt_chartAssignee')?.getContext('2d');if(!ctx)return;
   const colors=['#c8f135','#74b9ff','#ff6b6b','#a29bfe','#fd79a8','#ff9f43','#48dbfb','#2ecc71','#e17055','#6c5ce7'];
-  tt_chartAssignee=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Completed',data:entries.map(e=>e[1].done),backgroundColor:entries.map((_,i)=>colors[i%colors.length]+'cc'),borderRadius:4},{label:'Pending',data:entries.map(e=>e[1].total-e[1].done),backgroundColor:entries.map((_,i)=>colors[i%colors.length]+'33'),borderRadius:4}]},options:{...TT_CHART_DEFAULTS,plugins:{legend:{display:true,labels:{color:'#9090aa',font:{size:11}}}},scales:{x:{stacked:true,ticks:{color:'#6b6b80',font:{size:10}},grid:{color:'#2a2a3a'}},y:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'},beginAtZero:true}}}});
+  tt_chartAssignee=new Chart(ctx,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Completed',data:entries.map(e=>e[1].done),backgroundColor:entries.map((_,i)=>colors[i%colors.length]+'cc'),borderRadius:4},{label:'Pending',data:entries.map(e=>e[1].total-e[1].done),backgroundColor:entries.map((_,i)=>colors[i%colors.length]+'33'),borderRadius:4}]},options:{...TT_CO,scales:{x:{stacked:true,ticks:{color:'#6b6b80',font:{size:10}},grid:{color:'#2a2a3a'}},y:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'},beginAtZero:true}}}});
   document.getElementById('tt_assigneeLegend').innerHTML=entries.map((e,i)=>`<div class="legend-item"><div class="legend-dot" style="background:${colors[i%colors.length]}"></div><span class="legend-label">${e[0]}</span><span class="legend-val" style="color:${colors[i%colors.length]}">${e[1].done}/${e[1].total}</span></div>`).join('');
 }
 
-function tt_renderPlatformChart() {
-  if(tt_chartPlatform)tt_chartPlatform.destroy();
-  // Build flat map of all TT categories including children
-  const platMap={};
-  TT_CATEGORIES.forEach(cat=>{
-    platMap[cat.id]={label:cat.label,icon:cat.icon||'📋',color:cat.color,total:0,done:0};
-    if(cat.children)cat.children.forEach(ch=>{platMap[ch.id]={label:ch.label,icon:ch.icon||'•',color:ch.color,total:0,done:0};});
-  });
-  tt_tasks.forEach(t=>{if(platMap[t.category]){platMap[t.category].total++;if(t.done)platMap[t.category].done++;}});
-  const allCats=Object.values(platMap).filter(p=>p.total>0);
-  const topCat=allCats.length?allCats.reduce((a,b)=>a.total>=b.total?a:b,allCats[0]):{icon:'—',label:'None'};
-  const totalAll=allCats.reduce((s,p)=>s+p.total,0),doneAll=allCats.reduce((s,p)=>s+p.done,0);
-  document.getElementById('tt_platformSummary').innerHTML=`<div class="asummary-card"><div class="asummary-val" style="color:var(--accent)">${totalAll}</div><div class="asummary-label">Total Tasks</div></div><div class="asummary-card"><div class="asummary-val" style="color:#2ecc71">${doneAll}</div><div class="asummary-label">Completed</div></div><div class="asummary-card"><div class="asummary-val" style="color:#ff9f43;font-size:0.85rem">${topCat.icon} ${topCat.label}</div><div class="asummary-label">Most Active</div></div>`;
-  const ctx=document.getElementById('tt_chartPlatform')?.getContext('2d'); if(!ctx)return;
-  tt_chartPlatform=new Chart(ctx,{type:'bar',data:{labels:allCats.map(p=>`${p.icon} ${p.label}`),datasets:[{label:'Completed',data:allCats.map(p=>p.done),backgroundColor:allCats.map(p=>p.color+'cc'),borderRadius:4},{label:'Pending',data:allCats.map(p=>p.total-p.done),backgroundColor:allCats.map(p=>p.color+'44'),borderRadius:4}]},options:{...TT_CHART_DEFAULTS,plugins:{legend:{display:true,labels:{color:'#9090aa',font:{size:11}}}},scales:{x:{stacked:true,ticks:{color:'#6b6b80',font:{size:10}},grid:{color:'#2a2a3a'}},y:{stacked:true,ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'},beginAtZero:true}}}});
-  document.getElementById('tt_platformLegend').innerHTML=allCats.map(p=>{const rate=p.total?Math.round(p.done/p.total*100):0;return`<div class="legend-item"><div class="legend-dot" style="background:${p.color}"></div><span class="legend-label">${p.icon} ${p.label}</span><span class="legend-val" style="color:${p.color}">${p.done}/${p.total}</span><span style="font-size:0.65rem;color:var(--text-muted);margin-left:2px">${rate}%</span></div>`;}).join('');
-}
-
-function tt_renderOverdueReport() {
-  const todayKey=today();
-  const overdue=tt_tasks.filter(t=>!t.done&&t.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date));
-  const byAssignee={};overdue.forEach(t=>{const n=t.assignedTo||'Unassigned';if(!byAssignee[n])byAssignee[n]=[];byAssignee[n].push(t);});
-  const mostOverdue=Object.keys(byAssignee).reduce((a,b)=>(byAssignee[a]?.length>=byAssignee[b]?.length?a:b),Object.keys(byAssignee)[0]||'—');
-  document.getElementById('tt_overdueSummary').innerHTML=`<div class="asummary-card"><div class="asummary-val" style="color:#ff6b6b">${overdue.length}</div><div class="asummary-label">Overdue Tasks</div></div><div class="asummary-card"><div class="asummary-val" style="color:#ff9f43">${Object.keys(byAssignee).length}</div><div class="asummary-label">Members Affected</div></div><div class="asummary-card"><div class="asummary-val" style="color:#ff6b6b;font-size:1rem">${mostOverdue}</div><div class="asummary-label">Most Overdue</div></div>`;
+function tt_renderOverdue(){
+  const tk=today(),overdue=tt_tasks.filter(t=>!t.done&&t.date<tk).sort((a,b)=>a.date.localeCompare(b.date));
+  const by={};overdue.forEach(t=>{const n=t.assignedTo||'Unassigned';if(!by[n])by[n]=[];by[n].push(t);});
+  const most=Object.keys(by).reduce((a,b)=>(by[a]?.length>=by[b]?.length?a:b),Object.keys(by)[0]||'—');
+  document.getElementById('tt_overdueSummary').innerHTML=`<div class="asummary-card"><div class="asummary-val" style="color:#ff6b6b">${overdue.length}</div><div class="asummary-label">Overdue</div></div><div class="asummary-card"><div class="asummary-val" style="color:#ff9f43">${Object.keys(by).length}</div><div class="asummary-label">Affected</div></div><div class="asummary-card"><div class="asummary-val" style="color:#ff6b6b;font-size:0.9rem">${most}</div><div class="asummary-label">Most Overdue</div></div>`;
   const list=document.getElementById('tt_overdueList');
-  if(!overdue.length){list.innerHTML=`<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.85rem">🎉 No overdue tasks!</div>`;return;}
+  if(!overdue.length){list.innerHTML=`<div style="text-align:center;padding:2rem;color:var(--text-muted)">🎉 No overdue tasks!</div>`;return;}
   list.innerHTML='';
-  Object.keys(byAssignee).forEach(name=>{
-    const header=document.createElement('div');header.style.cssText=`font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;color:#ff9f43;letter-spacing:0.08em;text-transform:uppercase;margin-top:8px;margin-bottom:4px`;header.innerHTML=`👤 ${name} <span style="background:rgba(255,107,107,0.15);color:#ff6b6b;border-radius:4px;padding:1px 7px;font-size:0.68rem">${byAssignee[name].length} overdue</span>`;list.appendChild(header);
-    byAssignee[name].forEach(t=>{const cat=tt_findCat(t.category);const days=Math.floor((new Date(todayKey)-new Date(t.date))/86400000);const item=document.createElement('div');item.style.cssText=`background:var(--surface2);border:1px solid rgba(255,107,107,0.25);border-radius:8px;padding:10px 14px;cursor:pointer;position:relative;overflow:hidden`;item.innerHTML=`<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#ff6b6b;border-radius:3px 0 0 3px"></div><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px"><div style="font-family:'Syne',sans-serif;font-weight:600;font-size:0.82rem;flex:1">${t.title}</div><span style="background:rgba(255,107,107,0.15);color:#ff6b6b;border-radius:4px;padding:2px 8px;font-size:0.68rem">⚠️ ${days}d overdue</span></div><div style="display:flex;gap:6px"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span><span style="font-size:0.68rem;color:var(--text-muted)">📅 ${t.date}</span></div>`;item.onclick=()=>{tt_closeAnalytics();tt_selectDay(t.date);};list.appendChild(item);});
+  Object.keys(by).forEach(name=>{
+    const h=document.createElement('div');h.style.cssText='font-family:\'Syne\',sans-serif;font-weight:700;font-size:0.75rem;color:#ff9f43;margin-top:8px;margin-bottom:4px;';h.innerHTML=`👤 ${name} <span style="background:rgba(255,107,107,0.15);color:#ff6b6b;border-radius:4px;padding:1px 7px;font-size:0.68rem">${by[name].length} overdue</span>`;list.appendChild(h);
+    by[name].forEach(t=>{const cat=tt_findCat(t.category),days=Math.floor((new Date(tk)-new Date(t.date))/86400000);const item=document.createElement('div');item.style.cssText='background:var(--surface2);border:1px solid rgba(255,107,107,0.25);border-radius:8px;padding:10px 14px;cursor:pointer;position:relative;overflow:hidden;margin-bottom:4px;';item.innerHTML=`<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#ff6b6b;border-radius:3px 0 0 3px"></div><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px"><div style="font-family:'Syne',sans-serif;font-weight:600;font-size:0.82rem;flex:1">${t.title}</div><span style="background:rgba(255,107,107,0.15);color:#ff6b6b;border-radius:4px;padding:2px 8px;font-size:0.68rem">⚠️ ${days}d overdue</span></div><div style="display:flex;gap:6px"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span><span style="font-size:0.68rem;color:var(--text-muted)">📅 ${t.date}</span></div>`;item.onclick=()=>{tt_closeAnalytics();tt_selectDay(t.date);};list.appendChild(item);});
   });
 }
 
-function tt_resetTrendDates() {
-  const now=new Date(), from=new Date(now); from.setDate(now.getDate()-29);
-  const fEl=document.getElementById('tt_trendFrom'), tEl=document.getElementById('tt_trendTo');
-  if(fEl)fEl.value=dateKey(from); if(tEl)tEl.value=dateKey(now);
-  tt_renderTrendChart();
-}
-function tt_renderTrendChart() {
-  const fromVal=document.getElementById('tt_trendFrom')?.value, toVal=document.getElementById('tt_trendTo')?.value;
-  if(!fromVal||!toVal){tt_resetTrendDates();return;}
-  const from=new Date(fromVal+'T00:00:00'), to=new Date(toVal+'T23:59:59');
-  if(from>to)return;
-  const days=[]; const cur=new Date(from);
-  while(cur<=to){const key=dateKey(cur);const dt=tt_tasks.filter(t=>t.date===key);days.push({label:key,total:dt.length,done:dt.filter(t=>t.done).length});cur.setDate(cur.getDate()+1);}
-  let labels,totalData,doneData;
-  if(days.length>30){const buckets=[];for(let i=0;i<days.length;i+=7){const chunk=days.slice(i,i+7);buckets.push({label:chunk[0].label,total:chunk.reduce((s,d)=>s+d.total,0),done:chunk.reduce((s,d)=>s+d.done,0)});}labels=buckets.map(b=>b.label);totalData=buckets.map(b=>b.total);doneData=buckets.map(b=>b.done);}else{labels=days.map(d=>d.label);totalData=days.map(d=>d.total);doneData=days.map(d=>d.done);}
-  const ta=totalData.reduce((s,v)=>s+v,0),da=doneData.reduce((s,v)=>s+v,0);
-  document.getElementById('tt_trendSummary').innerHTML=`<div class="asummary-card"><div class="asummary-val" style="color:var(--accent)">${ta}</div><div class="asummary-label">Total Tasks</div></div><div class="asummary-card"><div class="asummary-val" style="color:#2ecc71">${da}</div><div class="asummary-label">Completed</div></div><div class="asummary-card"><div class="asummary-val" style="color:#74b9ff">${ta?Math.round(da/ta*100):0}%</div><div class="asummary-label">Rate</div></div>`;
-  if(tt_chartTrend)tt_chartTrend.destroy();
-  const ctx=document.getElementById('tt_chartTrend')?.getContext('2d'); if(!ctx)return;
-  tt_chartTrend=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Total',data:totalData,borderColor:'#c8f135',backgroundColor:'rgba(200,241,53,0.06)',tension:0.4,fill:true,pointRadius:3},{label:'Completed',data:doneData,borderColor:'#2ecc71',backgroundColor:'rgba(46,204,113,0.06)',tension:0.4,fill:true,pointRadius:3}]},options:{...TT_CHART_DEFAULTS,plugins:{legend:{display:true,labels:{color:'#9090aa',font:{size:11}}}},scales:{x:{ticks:{color:'#6b6b80',font:{size:9},maxRotation:45},grid:{color:'#2a2a3a'}},y:{ticks:{color:'#6b6b80'},grid:{color:'#2a2a3a'},beginAtZero:true}}}});
-}
-window.tt_renderTrendChart=tt_renderTrendChart; window.tt_resetTrendDates=tt_resetTrendDates;
-
-// ── Export Excel ──
-function tt_exportToExcel() {
+// ── EXPORT ──
+function tt_exportToExcel(){
   if(!window.XLSX){alert('Excel library not loaded yet.');return;}
   const wb=XLSX.utils.book_new();
-  const rows=tt_tasks.map(t=>{const cat=tt_findCat(t.category);return{'Title':t.title,'Category':cat.label,'Assigned To':t.assignedTo||'Unassigned','Created By':t.createdByName||'','Date':t.date,'Time':t.time||'','Priority':t.priority||'normal','Status':t.done?'Completed':(!t.done&&t.date<today()?'OVERDUE':'Pending'),'Notes':t.notes||''};});
-  const ws=XLSX.utils.json_to_sheet(rows); XLSX.utils.book_append_sheet(wb,ws,'All Tasks');
+  const rows=tt_tasks.map(t=>{const cat=tt_findCat(t.category);return{'Title':t.title,'Category':cat.label,'Assigned To':t.assignedTo||'Unassigned','Created By':t.createdByName||'','Date':t.date,'Time':t.time||'','Priority':t.priority||'normal','Status':t.done?'Completed':(!t.done&&t.date<today()?'OVERDUE':'Pending'),'Company Name':t.companyName||'','Quotation #':t.quotationNumber||'','Amount':t.amount||'','Notes':t.notes||''};});
+  const ws=XLSX.utils.json_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,'All Tasks');
   XLSX.writeFile(wb,`CMG-TaskTracking-${today()}.xlsx`);
 }
 window.tt_exportToExcel=tt_exportToExcel;
 
-// ── PDF Report (reuse existing generatePDFReport logic) ──
-function tt_openReportModal(){document.getElementById('tt_reportModalOverlay').classList.add('open');tt_selectReportPeriod('weekly');}
-function tt_closeReportModal(){document.getElementById('tt_reportModalOverlay').classList.remove('open');}
-window.tt_openReportModal=tt_openReportModal; window.tt_closeReportModal=tt_closeReportModal;
-
-function tt_selectReportPeriod(period){
-  tt_currentReportPeriod=period;
-  ['weekly','monthly','quarterly','annual'].forEach(p=>document.getElementById(`tt_rp-${p}`)?.classList.toggle('active',p===period));
-  const sel=document.getElementById('tt_reportPeriodSelector'); if(!sel)return;
-  sel.innerHTML=`<div style="font-size:0.78rem;color:var(--text-muted);font-family:'DM Mono',monospace">Period selected: <strong style="color:var(--accent)">${period}</strong></div>`;
-}
-window.tt_selectReportPeriod=tt_selectReportPeriod;
-
-function tt_generatePDFReport() {
-  // Minimal PDF gen (reuse same pattern as original)
-  if(typeof exportToPDF==='function'){
-    // swap tasks temporarily
-    const orig=tasks; tasks=tt_tasks; exportToPDF(); tasks=orig;
-  } else { alert('PDF export: use the Excel export for now, or open the main calendar tab for full PDF support.'); }
-}
-window.tt_generatePDFReport=tt_generatePDFReport;
-
-// ── Mobile ──
-function tt_mobNav(tab) {
+// ── MOBILE ──
+function tt_mobNav(tab){
   ['tt_mnbCal','tt_mnbAdd','tt_mnbStats','tt_mnbMenu'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
-  if(tab==='cal'){ document.getElementById('tt_mnbCal')?.classList.add('active'); }
-  else if(tab==='add'){ document.getElementById('tt_mnbAdd')?.classList.add('active'); document.getElementById('tt_modalOverlay')?.classList.add('open'); if(tt_selectedDate)document.getElementById('tt_taskDate').value=tt_selectedDate; else document.getElementById('tt_taskDate').value=today(); tt_buildCatSelector(); }
-  else if(tab==='stats'){ document.getElementById('tt_mnbStats')?.classList.add('active'); document.getElementById('tt_mobStatsDrawer')?.classList.add('open'); }
-  else if(tab==='menu'){ document.getElementById('tt_mnbMenu')?.classList.add('active'); document.getElementById('tt_mobMenuDrawer')?.classList.add('open'); }
+  if(tab==='cal'){document.getElementById('tt_mnbCal')?.classList.add('active');}
+  else if(tab==='add'){document.getElementById('tt_mnbAdd')?.classList.add('active');document.getElementById('tt_modalOverlay')?.classList.add('open');document.getElementById('tt_taskDate').value=tt_selectedDate||today();tt_buildCatSelector();tt_updateSubFields();}
+  else if(tab==='stats'){document.getElementById('tt_mnbStats')?.classList.add('active');document.getElementById('tt_mobStatsDrawer')?.classList.add('open');}
+  else if(tab==='menu'){document.getElementById('tt_mnbMenu')?.classList.add('active');document.getElementById('tt_mobMenuDrawer')?.classList.add('open');}
 }
-function tt_closeMobDrawer(id){document.getElementById(id)?.classList.remove('open');['tt_mnbCal','tt_mnbAdd','tt_mnbStats','tt_mnbMenu'].forEach(i=>document.getElementById(i)?.classList.remove('active'));document.getElementById('tt_mnbCal')?.classList.add('active');}
-function tt_closeMobPanel(){document.getElementById('tt_mobDayPanel')?.classList.remove('open');}
-function tt_mobChangeMonth(dir){tt_currentDate.setMonth(tt_currentDate.getMonth()+dir);tt_renderCalendar();}
-window.tt_mobNav=tt_mobNav; window.tt_closeMobDrawer=tt_closeMobDrawer; window.tt_closeMobPanel=tt_closeMobPanel; window.tt_mobChangeMonth=tt_mobChangeMonth;
+window.tt_mobNav=tt_mobNav;
 
-// ── Init Tracking Tab ──
-function initTrackingTab() {
-  // Sync user info
+// ── MAIN INIT (called on first tab switch) ──
+function tt_initApp() {
+  // Sync user
   if (currentUserProfile) {
-    const chipName = document.getElementById('tt_userChipName');
-    if (chipName) chipName.textContent = currentUserProfile.name;
-    if (currentUserProfile.role === 'admin') {
-      const wrap = document.getElementById('tt_adminBtnWrap'); if(wrap) wrap.style.display='block';
-    }
+    const cn=document.getElementById('tt_userChipName'); if(cn) cn.textContent=currentUserProfile.name;
+    if(currentUserProfile.role==='admin'){const w=document.getElementById('tt_adminBtnWrap');if(w)w.style.display='block';}
   }
 
-  // Subscribe to tracking tasks and material links
-  tt_subscribeToTasks();
-  tt_subscribeToMaterialLinks();
+  // Subscribe
+  tt_subscribe();
+  tt_subMaterials();
 
-  // Set today as selected
-  const todayKey = today();
-  tt_selectedDate = todayKey;
-  tt_renderCalendar();
+  // Initial render
+  tt_selectedDate = today();
+  tt_renderCal();
   tt_renderStats();
-  tt_renderCategories();
-  tt_renderCatFilterBar();
-  tt_renderNotifDropdown();
-  tt_populateAssigneeDropdown();
+  tt_renderSidebarCats();
+  tt_renderFilterBar();
+  tt_renderNotifDrop();
+  tt_populateAssignee();
 
   // Month nav
-  document.getElementById('tt_prevMonth').onclick = () => { tt_currentDate.setMonth(tt_currentDate.getMonth()-1); tt_renderCalendar(); tt_renderStats(); tt_renderCategories(); };
-  document.getElementById('tt_nextMonth').onclick = () => { tt_currentDate.setMonth(tt_currentDate.getMonth()+1); tt_renderCalendar(); tt_renderStats(); tt_renderCategories(); };
+  document.getElementById('tt_prevMonth').onclick = () => { tt_currentDate.setMonth(tt_currentDate.getMonth()-1); tt_renderCal(); tt_renderStats(); tt_renderSidebarCats(); };
+  document.getElementById('tt_nextMonth').onclick = () => { tt_currentDate.setMonth(tt_currentDate.getMonth()+1); tt_renderCal(); tt_renderStats(); tt_renderSidebarCats(); };
 
-  // Add Task modal
+  // Add Task button
   document.getElementById('tt_openModal').onclick = () => {
-    tt_editingTaskId = null;
-    tt_selectedCat = 'emailer';
+    tt_editingTaskId = null; tt_selectedCat = 'emailer';
     document.getElementById('tt_modalTitleText').textContent = 'New Task';
     document.getElementById('tt_saveTask').textContent = 'Add to Calendar';
-    document.getElementById('tt_taskTitle').value = '';
-    document.getElementById('tt_taskTime').value = '';
-    document.getElementById('tt_taskRemind').value = '10';
-    document.getElementById('tt_taskNotes').value = '';
-    document.getElementById('tt_taskPriority').value = 'normal';
-    document.getElementById('tt_taskApproval').value = '';
-    document.getElementById('tt_taskDate').value = tt_selectedDate || today();
+    ['tt_taskTitle','tt_taskNotes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('tt_taskTime').value=''; document.getElementById('tt_taskRemind').value='10';
+    document.getElementById('tt_taskPriority').value='normal';
+    document.getElementById('tt_taskDate').value = tt_selectedDate||today();
     document.getElementById('tt_modalOverlay').classList.add('open');
-    tt_buildCatSelector();
-    tt_updateSubFields();
-    tt_populateAssigneeDropdown();
+    tt_buildCatSelector(); tt_updateSubFields(); tt_populateAssignee();
   };
+
+  // Close modal
   document.getElementById('tt_closeModal').onclick = () => document.getElementById('tt_modalOverlay').classList.remove('open');
   document.getElementById('tt_modalOverlay').onclick = e => { if(e.target===document.getElementById('tt_modalOverlay')) document.getElementById('tt_modalOverlay').classList.remove('open'); };
 
-  // Save task
+  // Save Task
   document.getElementById('tt_saveTask').addEventListener('click', async () => {
-    const title = document.getElementById('tt_taskTitle').value.trim();
-    const date  = document.getElementById('tt_taskDate').value;
-    if (!title || !date) { alert('Please fill in title and date.'); return; }
-    const subFieldData = tt_collectSubFields();
+    const title=document.getElementById('tt_taskTitle').value.trim();
+    const date =document.getElementById('tt_taskDate').value;
+    if(!title||!date){alert('Please fill in title and date.');return;}
+    const subData = tt_collectSubFields();
     const taskData = {
-      title, date,
-      category:   tt_selectedCat,
-      time:       document.getElementById('tt_taskTime').value,
-      remind:     document.getElementById('tt_taskRemind').value,
-      notes:      document.getElementById('tt_taskNotes').value.trim(),
-      priority:   document.getElementById('tt_taskPriority').value,
-      assignedTo: document.getElementById('tt_taskAssignee')?.value || '',
-      approval:   document.getElementById('tt_taskApproval')?.value || '',
-      ...subFieldData,
+      title, date, category:tt_selectedCat,
+      time:    document.getElementById('tt_taskTime').value,
+      remind:  document.getElementById('tt_taskRemind').value,
+      notes:   document.getElementById('tt_taskNotes').value.trim(),
+      priority:document.getElementById('tt_taskPriority').value,
+      assignedTo:document.getElementById('tt_taskAssignee')?.value||'',
+      ...subData,
     };
-    if (tt_editingTaskId) {
-      await tt_updateTask(tt_editingTaskId, taskData);
-      tt_editingTaskId = null;
+    if(tt_editingTaskId){
+      await tt_updateTask(tt_editingTaskId, taskData); tt_editingTaskId=null;
     } else {
-      taskData.done = false;
-      taskData.createdAt = new Date().toISOString();
-      taskData.createdBy = currentUser?.uid || 'unknown';
-      taskData.createdByName = currentUserProfile?.name || 'Unknown';
-      taskData.comments = []; taskData.links = [];
-      taskData.activity = [{text:`✅ Task created by ${currentUserProfile?.name||'someone'}`,time:new Date().toISOString()}];
+      taskData.done=false; taskData.createdAt=new Date().toISOString();
+      taskData.createdBy=currentUser?.uid||'unknown'; taskData.createdByName=currentUserProfile?.name||'Unknown';
+      taskData.comments=[]; taskData.links=[]; taskData.activity=[{text:`✅ Created by ${currentUserProfile?.name||'someone'}`,time:new Date().toISOString()}];
       await tt_saveTask(taskData);
-      tt_addInAppNotif(`➕ New Task Added`, `"${title}" scheduled for ${date}`, date);
+      tt_addNotif(`➕ New Task Added`,`"${title}" scheduled for ${date}`,date);
     }
-    document.getElementById('tt_modalTitleText').textContent = 'New Task';
-    document.getElementById('tt_saveTask').textContent = 'Add to Calendar';
+    document.getElementById('tt_modalTitleText').textContent='New Task';
+    document.getElementById('tt_saveTask').textContent='Add to Calendar';
     document.getElementById('tt_modalOverlay').classList.remove('open');
-    tt_selectedDate = date;
+    tt_selectedDate=date;
   });
 
   // Logout
   document.getElementById('tt_logoutBtn').onclick = doLogout;
 
-  // Task detail close
+  // Close overlays on backdrop click
   document.getElementById('tt_taskDetailOverlay').onclick = e => { if(e.target===document.getElementById('tt_taskDetailOverlay'))tt_closeTaskDetail(); };
-  document.getElementById('tt_statModalOverlay').onclick = e => { if(e.target===document.getElementById('tt_statModalOverlay'))tt_closeStatModal(); };
-  document.getElementById('tt_analyticsOverlay').onclick = e => { if(e.target===document.getElementById('tt_analyticsOverlay'))tt_closeAnalytics(); };
+  document.getElementById('tt_statModalOverlay').onclick  = e => { if(e.target===document.getElementById('tt_statModalOverlay'))tt_closeStatModal(); };
+  document.getElementById('tt_analyticsOverlay').onclick  = e => { if(e.target===document.getElementById('tt_analyticsOverlay'))tt_closeAnalytics(); };
 
-  // Overdue check
-  setTimeout(()=>{
-    const todayKey=today();
-    tt_tasks.filter(t=>!t.done&&t.date<todayKey).forEach(t=>{
-      const already=tt_inAppNotifs.some(n=>n.body&&n.body.includes(t.title)&&n.title.includes('Overdue'));
-      if(!already)tt_addInAppNotif(`⚠️ Overdue Task`,`"${t.title}" was due on ${t.date}`,t.date);
+  // Notification button
+  document.getElementById('tt_notifBtn').onclick = () => {
+    if(!('Notification' in window)) return;
+    if(Notification.permission==='granted') return;
+    Notification.requestPermission().then(()=>{
+      const lbl=document.getElementById('tt_notifLabel'); if(lbl) lbl.textContent=Notification.permission==='granted'?'Alerts ON':'Enable Alerts';
+    });
+  };
+
+  // Click outside notif dropdown
+  document.addEventListener('click', e => {
+    const wrap=document.getElementById('tt_notifBellBtn');
+    if(wrap && !wrap.contains(e.target)) document.getElementById('tt_notifDropdown')?.classList.remove('open');
+  });
+
+  // Check overdue
+  setTimeout(() => {
+    const tk=today();
+    tt_tasks.filter(t=>!t.done&&t.date<tk).forEach(t=>{
+      if(!tt_inAppNotifs.some(n=>n.body&&n.body.includes(t.title)&&n.title.includes('Overdue')))
+        tt_addNotif(`⚠️ Overdue Task`,`"${t.title}" was due on ${t.date}`,t.date);
     });
   }, 2500);
 }
-
-// Also patch enterApp to keep tracking tab user info in sync
-const _origEnterApp = window.enterApp || function(){};
-// enterApp is defined in-scope, patch via post-init callback
-document.addEventListener('DOMContentLoaded', () => {
-  // nothing needed here — initTrackingTab is called lazily on first tab switch
-});
 </script>
 </body>
 </html>
