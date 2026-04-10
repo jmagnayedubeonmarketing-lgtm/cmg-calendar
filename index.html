@@ -6714,27 +6714,46 @@ function tt_generatePDFReport() {
   const overdue  = filtered.filter(t => !t.done && t.date < todayKey).length;
   const rate     = filtered.length ? Math.round(done / filtered.length * 100) : 0;
 
-  // Task rows
+  // ── helpers ──
+  const fmtDate = iso => iso ? new Date(iso).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}) : '—';
+  const leadtime = t => {
+    if (!t.done || !t.doneAt || !t.date) return '—';
+    const d = Math.round((new Date(t.doneAt) - new Date(t.date+'T00:00:00')) / 86400000);
+    return d === 0 ? 'Same day' : d === 1 ? '1 day' : `${d} days`;
+  };
+  const doneStatus = t => {
+    if (t.done) {
+      const dt = t.doneAt ? fmtDate(t.doneAt) : '';
+      const lt = leadtime(t);
+      return `<span style="color:#2ecc71;font-weight:700">✓ Done</span>${dt ? `<br><span style="font-size:10px;color:#555">${dt} · ${lt}</span>` : ''}`;
+    }
+    if (!t.done && t.date < todayKey) return `<span style="color:#e74c3c;font-weight:700">⚠️ Overdue</span>`;
+    return `<span style="color:#c0392b">⏳ Pending</span>`;
+  };
+
+  // ── Task rows ──
   const taskRows = filtered
     .sort((a,b) => a.date.localeCompare(b.date))
     .map(t => {
       const cat = tt_findCat(t.category);
-      const isOverdue = !t.done && t.date < todayKey;
-      const leadtime = t.done && t.doneAt && t.date
-        ? (() => { const d = Math.round((new Date(t.doneAt)-new Date(t.date+'T00:00:00'))/(86400000)); return d===0?'Same day':d===1?'1 day':`${d} days`; })()
-        : '—';
-      return `<tr style="border-bottom:1px solid #eee">
-        <td style="padding:7px 8px">${t.title}</td>
+      const comments = (t.comments||[]).map(c =>
+        `<div style="margin-top:3px;font-size:10px;color:#555;padding-left:6px;border-left:2px solid #ddd">
+          <strong>${c.authorName||c.author||'?'}</strong> · ${new Date(c.time).toLocaleDateString('en-PH',{month:'short',day:'numeric'})}:
+          ${c.text}
+        </div>`
+      ).join('');
+      return `<tr style="border-bottom:1px solid #eee;vertical-align:top">
+        <td style="padding:7px 8px">${t.title}${comments ? `<div style="margin-top:4px">${comments}</div>` : ''}</td>
         <td style="padding:7px 8px">${cat.label}</td>
         <td style="padding:7px 8px">${t.assignedTo||'—'}</td>
-        <td style="padding:7px 8px">${t.date}</td>
-        <td style="padding:7px 8px">${t.priority||'normal'}</td>
-        <td style="padding:7px 8px;color:${t.done?'#2ecc71':isOverdue?'#e74c3c':'#c0392b'};font-weight:600">${t.done?'✓ Done':isOverdue?'⚠️ Overdue':'⏳ Pending'}</td>
-        <td style="padding:7px 8px;text-align:center">${leadtime}</td>
+        <td style="padding:7px 8px;text-align:center">${t.date}</td>
+        <td style="padding:7px 8px;text-align:center;text-transform:capitalize">${t.priority||'normal'}</td>
+        <td style="padding:7px 8px">${doneStatus(t)}</td>
+        <td style="padding:7px 8px;text-align:center">${leadtime(t)}</td>
       </tr>`;
     }).join('');
 
-  // Assignee rows
+  // ── Assignee rows ──
   const assigneeMap = {};
   filtered.forEach(t => {
     const n = t.assignedTo||'Unassigned';
@@ -6755,22 +6774,23 @@ function tt_generatePDFReport() {
     </tr>`;
   }).join('');
 
-  // Category rows
-  const catRows = TT_CATEGORIES.map(cat => {
+  // ── Category rows ──
+  const catData = TT_CATEGORIES.map(cat => {
     const childIds=(cat.children||[]).map(c=>c.id);
     const ct=filtered.filter(t=>t.category===cat.id||childIds.includes(t.category));
     const cd=ct.filter(t=>t.done).length;
     const cr=ct.length?Math.round(cd/ct.length*100):0;
-    return `<tr style="border-bottom:1px solid #eee">
-      <td style="padding:7px 8px">${cat.icon||''} ${cat.label}</td>
-      <td style="padding:7px 8px;text-align:center">${ct.length}</td>
-      <td style="padding:7px 8px;text-align:center;color:#2ecc71;font-weight:600">${cd}</td>
-      <td style="padding:7px 8px;text-align:center;color:#c0392b">${ct.length-cd}</td>
-      <td style="padding:7px 8px;text-align:center;color:#0984e3;font-weight:700">${cr}%</td>
-    </tr>`;
-  }).join('');
+    return { label:`${cat.icon||''} ${cat.label}`, total:ct.length, done:cd, pending:ct.length-cd, rate:cr, color:cat.color };
+  });
+  const catRows = catData.map(c => `<tr style="border-bottom:1px solid #eee">
+    <td style="padding:7px 8px">${c.label}</td>
+    <td style="padding:7px 8px;text-align:center">${c.total}</td>
+    <td style="padding:7px 8px;text-align:center;color:#2ecc71;font-weight:600">${c.done}</td>
+    <td style="padding:7px 8px;text-align:center;color:#c0392b">${c.pending}</td>
+    <td style="padding:7px 8px;text-align:center;color:#0984e3;font-weight:700">${c.rate}%</td>
+  </tr>`).join('');
 
-  // Overdue rows
+  // ── Overdue rows ──
   const overdueRows = filtered
     .filter(t=>!t.done&&t.date<todayKey)
     .sort((a,b)=>a.date.localeCompare(b.date))
@@ -6781,30 +6801,46 @@ function tt_generatePDFReport() {
         <td style="padding:7px 8px">${t.title}</td>
         <td style="padding:7px 8px">${t.assignedTo||'—'}</td>
         <td style="padding:7px 8px">${cat.label}</td>
-        <td style="padding:7px 8px">${t.date}</td>
-        <td style="padding:7px 8px;color:#e74c3c;font-weight:700">${days} day${days!==1?'s':''}</td>
+        <td style="padding:7px 8px;text-align:center">${t.date}</td>
+        <td style="padding:7px 8px;text-align:center;color:#e74c3c;font-weight:700">${days} day${days!==1?'s':''}</td>
       </tr>`;
     }).join('');
 
+  // ── Chart data for JS in report window ──
+  const assigneeChartData = JSON.stringify(Object.entries(assigneeMap).map(([n,r])=>({name:n,done:r.done,pending:r.total-r.done})));
+  const catChartData      = JSON.stringify(catData.map(c=>({label:c.label,total:c.total,done:c.done,pending:c.pending,color:c.color})));
+  const statusChartData   = JSON.stringify([{label:'Completed',val:done,color:'#2ecc71'},{label:'Pending',val:filtered.length-done-overdue,color:'#fdcb6e'},{label:'Overdue',val:overdue,color:'#e74c3c'}]);
+
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <title>CMG Task Tracking — ${periodLabel} Report</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 30px; color: #222; font-size: 13px; }
-    h1 { color: #0a0a0f; margin-bottom: 2px; font-size: 20px; text-align: center; }
-    .badge { display:inline-block; background:#0a0a0f; color:#c8f135; border-radius:4px; padding:2px 10px; font-size:11px; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; margin-left:8px; vertical-align:middle; }
-    .meta { color: #666; font-size: 12px; margin: 6px 0 20px; text-align: center; }
-    .stats { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; justify-content:center; }
-    .stat { background:#f5f5f5; border-radius:8px; padding:10px 16px; text-align:center; min-width:80px; }
-    .stat-val { font-size:22px; font-weight:800; }
-    .stat-label { font-size:10px; color:#888; text-transform:uppercase; }
-    h2 { color:#0a0a0f; font-size:14px; margin:26px 0 8px; border-bottom:2px solid #0a0a0f; padding-bottom:5px; text-align: center; }
-    table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:6px; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; padding: 32px; color: #222; font-size: 13px; max-width: 1100px; margin: 0 auto; }
+    h1 { color: #0a0a0f; margin-bottom: 4px; font-size: 22px; text-align: center; }
+    .badge { display:inline-block; background:#0a0a0f; color:#c8f135; border-radius:4px; padding:3px 12px; font-size:11px; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; margin-left:8px; vertical-align:middle; }
+    .meta { color:#666; font-size:12px; margin:6px 0 24px; text-align:center; }
+    .stats { display:flex; gap:12px; margin-bottom:28px; flex-wrap:wrap; justify-content:center; }
+    .stat { background:#f5f5f5; border-radius:10px; padding:12px 20px; text-align:center; min-width:90px; border:1px solid #eee; }
+    .stat-val { font-size:24px; font-weight:800; line-height:1.1; }
+    .stat-label { font-size:10px; color:#888; text-transform:uppercase; letter-spacing:0.05em; margin-top:2px; }
+    h2 { color:#0a0a0f; font-size:15px; margin:32px 0 10px; border-bottom:2px solid #0a0a0f; padding-bottom:6px; text-align:center; }
+    table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:8px; }
     thead { background:#0a0a0f; color:white; }
-    thead th { padding:8px; text-align:left; }
+    thead th { padding:9px 10px; font-weight:700; }
+    thead th.num { text-align:center; }
+    thead th.left { text-align:left; }
+    tbody td { vertical-align:top; }
     tbody tr:nth-child(even) { background:#f9f9f9; }
     .no-data { text-align:center; padding:14px; color:#999; background:#f9f9f9; border-radius:6px; }
     .no-overdue { text-align:center; padding:14px; color:#2ecc71; font-weight:600; background:#f0fff4; border-radius:6px; }
-    @media print { body { padding:10px; } }
+    .charts-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin:20px 0 32px; }
+    .chart-box { background:#f9f9f9; border:1px solid #eee; border-radius:10px; padding:16px; text-align:center; }
+    .chart-box h3 { font-size:12px; color:#555; text-transform:uppercase; letter-spacing:0.06em; margin:0 0 12px; }
+    .chart-box canvas { max-height:200px; }
+    .priority-normal { color:#555; }
+    .priority-high { color:#e74c3c; font-weight:700; }
+    @media print { body{padding:16px;} .charts-row{grid-template-columns:1fr 1fr 1fr;} }
   </style></head><body>
 
   <h1>📋 CMG Task Tracking <span class="badge">${periodLabel} Report</span></h1>
@@ -6818,24 +6854,113 @@ function tt_generatePDFReport() {
     <div class="stat"><div class="stat-val" style="color:#0984e3">${rate}%</div><div class="stat-label">Completion Rate</div></div>
   </div>
 
+  <!-- CHARTS -->
+  <h2>📊 Visual Summary</h2>
+  <div class="charts-row">
+    <div class="chart-box"><h3>Task Status</h3><canvas id="chartStatus"></canvas></div>
+    <div class="chart-box"><h3>By Assignee</h3><canvas id="chartAssignee"></canvas></div>
+    <div class="chart-box"><h3>By Category</h3><canvas id="chartCategory"></canvas></div>
+  </div>
+
   <h2>👤 By Assignee</h2>
-  ${assigneeRows ? `<table><thead><tr><th>Assignee</th><th>Total</th><th>Completed</th><th>Pending</th><th>Overdue</th><th>Rate</th></tr></thead><tbody>${assigneeRows}</tbody></table>` : '<div class="no-data">No assignee data for this period.</div>'}
+  ${assigneeRows ? `<table>
+    <thead><tr>
+      <th class="left">Assignee</th>
+      <th class="num">Total</th>
+      <th class="num">Completed</th>
+      <th class="num">Pending</th>
+      <th class="num">Overdue</th>
+      <th class="num">Rate</th>
+    </tr></thead>
+    <tbody>${assigneeRows}</tbody>
+  </table>` : '<div class="no-data">No assignee data for this period.</div>'}
 
   <h2>🗂️ By Category</h2>
-  ${catRows ? `<table><thead><tr><th>Category</th><th>Total</th><th>Completed</th><th>Pending</th><th>Rate</th></tr></thead><tbody>${catRows}</tbody></table>` : '<div class="no-data">No category data for this period.</div>'}
+  ${catRows ? `<table>
+    <thead><tr>
+      <th class="left">Category</th>
+      <th class="num">Total</th>
+      <th class="num">Completed</th>
+      <th class="num">Pending</th>
+      <th class="num">Rate</th>
+    </tr></thead>
+    <tbody>${catRows}</tbody>
+  </table>` : '<div class="no-data">No category data for this period.</div>'}
 
   <h2>⚠️ Overdue Tasks</h2>
-  ${overdueRows ? `<table><thead><tr><th>Title</th><th>Assigned To</th><th>Category</th><th>Due Date</th><th>Days Overdue</th></tr></thead><tbody>${overdueRows}</tbody></table>` : '<div class="no-overdue">🎉 No overdue tasks in this period!</div>'}
+  ${overdueRows ? `<table>
+    <thead><tr>
+      <th class="left">Title</th>
+      <th class="left">Assigned To</th>
+      <th class="left">Category</th>
+      <th class="num">Due Date</th>
+      <th class="num">Days Overdue</th>
+    </tr></thead>
+    <tbody>${overdueRows}</tbody>
+  </table>` : '<div class="no-overdue">🎉 No overdue tasks in this period!</div>'}
 
   <h2>📋 All Tasks in Period</h2>
-  ${taskRows ? `<table><thead><tr><th>Title</th><th>Category</th><th>Assigned To</th><th>Date</th><th>Priority</th><th>Status</th><th>Leadtime</th></tr></thead><tbody>${taskRows}</tbody></table>` : '<div class="no-data">No tasks found for this period.</div>'}
+  ${taskRows ? `<table>
+    <thead><tr>
+      <th class="left">Title &amp; Comments</th>
+      <th class="left">Category</th>
+      <th class="left">Assigned To</th>
+      <th class="num">Date</th>
+      <th class="num">Priority</th>
+      <th class="left">Status / Done Date</th>
+      <th class="num">Leadtime</th>
+    </tr></thead>
+    <tbody>${taskRows}</tbody>
+  </table>` : '<div class="no-data">No tasks found for this period.</div>'}
 
+  <script>
+    const statusData  = ${statusChartData};
+    const assigneeData= ${assigneeChartData};
+    const catData2    = ${catChartData};
+
+    // Status doughnut
+    new Chart(document.getElementById('chartStatus'), {
+      type: 'doughnut',
+      data: {
+        labels: statusData.map(d=>d.label),
+        datasets:[{ data: statusData.map(d=>d.val), backgroundColor: statusData.map(d=>d.color), borderWidth:2 }]
+      },
+      options:{ responsive:true, plugins:{ legend:{ position:'bottom', labels:{ font:{size:11} } } } }
+    });
+
+    // Assignee bar
+    new Chart(document.getElementById('chartAssignee'), {
+      type: 'bar',
+      data: {
+        labels: assigneeData.map(d=>d.name),
+        datasets:[
+          { label:'Completed', data: assigneeData.map(d=>d.done),    backgroundColor:'#2ecc71cc', borderRadius:4 },
+          { label:'Pending',   data: assigneeData.map(d=>d.pending), backgroundColor:'#e74c3c66', borderRadius:4 }
+        ]
+      },
+      options:{ responsive:true, scales:{ x:{stacked:true,ticks:{font:{size:10}}}, y:{stacked:true,beginAtZero:true,ticks:{font:{size:10}}} }, plugins:{ legend:{ position:'bottom', labels:{ font:{size:10} } } } }
+    });
+
+    // Category bar (only categories with tasks)
+    const catFiltered = catData2.filter(c=>c.total>0);
+    new Chart(document.getElementById('chartCategory'), {
+      type: 'bar',
+      data: {
+        labels: catFiltered.map(c=>c.label.replace(/^[^ ]+ /,'')),
+        datasets:[
+          { label:'Done',    data: catFiltered.map(c=>c.done),    backgroundColor: catFiltered.map(c=>c.color+'cc'), borderRadius:4 },
+          { label:'Pending', data: catFiltered.map(c=>c.pending), backgroundColor: catFiltered.map(c=>c.color+'44'), borderRadius:4 }
+        ]
+      },
+      options:{ responsive:true, indexAxis:'y', scales:{ x:{stacked:true,beginAtZero:true,ticks:{font:{size:10}}}, y:{stacked:true,ticks:{font:{size:9}}} }, plugins:{ legend:{ position:'bottom', labels:{ font:{size:10} } } } }
+    });
+  <\/script>
   </body></html>`;
 
   const win = window.open('', '_blank');
   win.document.write(html);
   win.document.close();
-  setTimeout(() => win.print(), 500);
+  setTimeout(() => win.print(), 1200);
   tt_closeReportModal();
 }
 window.tt_generatePDFReport=tt_generatePDFReport;
