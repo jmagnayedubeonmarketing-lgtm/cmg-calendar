@@ -6797,8 +6797,14 @@ function tt_generatePDFReport() {
     .map(t => {
       const cat=tt_findCat(t.category);
       const days=Math.floor((new Date(todayKey)-new Date(t.date))/86400000);
-      return `<tr style="border-bottom:1px solid #eee">
-        <td style="padding:7px 8px">${t.title}</td>
+      const comments = (t.comments||[]).map(c =>
+        `<div style="margin-top:3px;font-size:10px;color:#555;padding-left:6px;border-left:2px solid #ddd">
+          <strong>${c.authorName||c.author||'?'}</strong> · ${new Date(c.time).toLocaleDateString('en-PH',{month:'short',day:'numeric'})}:
+          ${c.text}
+        </div>`
+      ).join('');
+      return `<tr style="border-bottom:1px solid #eee;vertical-align:top">
+        <td style="padding:7px 8px">${t.title}${comments ? `<div style="margin-top:4px">${comments}</div>` : ''}</td>
         <td style="padding:7px 8px">${t.assignedTo||'—'}</td>
         <td style="padding:7px 8px">${cat.label}</td>
         <td style="padding:7px 8px;text-align:center">${t.date}</td>
