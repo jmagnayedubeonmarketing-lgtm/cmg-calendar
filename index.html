@@ -2155,6 +2155,10 @@
       </div>
     </div>
     <div class="form-group">
+      <label class="form-label">📅 Due Date <span style="font-size:0.68rem;color:var(--text-muted);font-weight:400">(overdue reference — optional)</span></label>
+      <input class="form-input" type="date" id="tt_taskDueDate" />
+    </div>
+    <div class="form-group">
       <label class="form-label">🔔 Remind Me Before</label>
       <select class="form-select" id="tt_taskRemind">
         <option value="0">At task time</option>
@@ -2212,6 +2216,7 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div><div class="detail-section-title">Created By</div><div id="tt_tdCreatedBy" style="font-size:0.82rem;color:var(--text-dim)">—</div></div>
           <div><div class="detail-section-title">Assigned To</div><div id="tt_tdAssignedTo" style="font-size:0.82rem;color:var(--text-dim)">—</div></div>
+          <div><div class="detail-section-title">📅 Due Date</div><div id="tt_tdDueDate" style="font-size:0.82rem;color:var(--accent2)">—</div></div>
         </div>
       </div>
       <!-- Sub-fields (e.g. Company Name, Quotation Number, Amount) -->
@@ -2684,16 +2689,21 @@ function today() { return dateKey(new Date()); }
 
 // Build the ✓ DONE tag with completion date + leadtime
 function buildDoneTag(t) {
-  if (!t.done) return `<span class="task-tag" style="background:rgba(192,57,43,0.12);color:#e74c3c">⏳ PENDING</span>`;
+  if (!t.done) {
+    // Use dueDate if present (TT tasks), otherwise fall back to t.date
+    const ref = t.dueDate || t.date;
+    const isOv = ref && ref < today();
+    if (isOv) return `<span class="task-tag" style="background:rgba(231,76,60,0.15);color:#e74c3c;font-weight:700">⚠️ OVERDUE</span>`;
+    return `<span class="task-tag" style="background:rgba(192,57,43,0.12);color:#e74c3c">⏳ PENDING</span>`;
+  }
   let extra = '';
   if (t.doneAt) {
     const doneDate = new Date(t.doneAt);
     const doneDateStr = doneDate.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
-    // Calculate leadtime from task date to done date
     if (t.date) {
-      const taskDate = new Date(t.date + 'T00:00:00');
-      const diffMs = doneDate - taskDate;
-      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      const ref = t.dueDate || t.date;
+      const taskDate = new Date(ref + 'T00:00:00');
+      const diffDays = Math.round((doneDate - taskDate) / (1000 * 60 * 60 * 24));
       const leadStr = diffDays === 0 ? 'same day' : diffDays === 1 ? '1 day' : `${diffDays} days`;
       extra = ` · ${doneDateStr} · ${leadStr}`;
     } else {
@@ -5627,6 +5637,16 @@ function switchAppTab(tab) {
 // Uses Firestore collection: 'tasks_tracking'
 // ═══════════════════════════════════════════════════════
 
+// ── Overdue helper — uses dueDate if set, falls back to date ──
+function tt_isOverdue(t) {
+  if (t.done) return false;
+  const ref = t.dueDate || t.date;
+  return ref < today();
+}
+function tt_overdueRef(t) {
+  return t.dueDate || t.date;
+}
+
 // ── CMG TASK TRACKING CATEGORIES ──
 const TT_CATEGORIES = [
   {
@@ -5983,6 +6003,7 @@ function tt_renderPanel() {
         <span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span>
         ${t.time ? `<span class="task-time">⏰ ${t.time}</span>` : ''}
         ${t.priority === 'high' ? `<span class="task-tag" style="background:#ff6b6b20;color:#ff6b6b">HIGH</span>` : ''}
+        ${t.dueDate ? `<span class="task-tag" style="background:rgba(225,112,85,0.15);color:#e17055;font-weight:600">📅 Due: ${t.dueDate}</span>` : ''}
         ${buildDoneTag(t)}
         ${t.approval ? `<span class="task-tag" style="background:rgba(162,155,254,0.15);color:#a29bfe">🏷️ ${t.approval}</span>` : ''}
         ${t.assignedTo ? `<span class="task-tag" style="background:rgba(107,159,255,0.12);color:#74b9ff">👤 ${t.assignedTo}</span>` : ''}
@@ -6312,6 +6333,7 @@ function tt_openEditModal(taskId) {
   document.getElementById('tt_taskNotes').value  = t.notes || '';
   document.getElementById('tt_taskPriority').value = t.priority || 'normal';
   document.getElementById('tt_taskApproval').value  = t.approval || '';
+  document.getElementById('tt_taskDueDate').value   = t.dueDate || '';
   if (document.getElementById('tt_taskAssignee')) document.getElementById('tt_taskAssignee').value = t.assignedTo || '';
   // Set category — default to emailer if unknown
   tt_selectedCat = tt_getAllCatIds().includes(t.category) ? t.category : 'emailer';
@@ -6395,9 +6417,22 @@ function tt_openTaskDetail(taskId) {
   const parentCat = tt_findParentCat(t.category);
   const catLabel = parentCat ? `${parentCat.label} › ${cat.label}` : cat.label;
   const dateStr=new Date(t.date+'T12:00:00').toLocaleString('default',{month:'long',day:'numeric',year:'numeric'});
-  document.getElementById('tt_tdMeta').innerHTML=`<span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${catLabel}</span><span class="task-tag" style="background:var(--surface2);color:var(--text-dim)">📅 ${dateStr}</span>${t.time?`<span class="task-tag" style="background:var(--surface2);color:var(--text-dim)">⏰ ${t.time}</span>`:''} ${buildDoneTag(t)}`;
+  document.getElementById('tt_tdMeta').innerHTML=`<span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${catLabel}</span><span class="task-tag" style="background:var(--surface2);color:var(--text-dim)">📅 ${dateStr}</span>${t.dueDate?`<span class="task-tag" style="background:rgba(225,112,85,0.15);color:#e17055;font-weight:600">⏰ Due: ${t.dueDate}</span>`:''}${t.time?`<span class="task-tag" style="background:var(--surface2);color:var(--text-dim)">🕐 ${t.time}</span>`:''} ${buildDoneTag(t)}`;
   document.getElementById('tt_tdCreatedBy').textContent = t.createdByName || t.createdBy || '—';
   document.getElementById('tt_tdAssignedTo').textContent = t.assignedTo || '— Unassigned —';
+  const dueDateEl = document.getElementById('tt_tdDueDate');
+  if (dueDateEl) {
+    if (t.dueDate) {
+      const isPastDue = !t.done && t.dueDate < today();
+      dueDateEl.textContent = t.dueDate;
+      dueDateEl.style.color = isPastDue ? '#e74c3c' : 'var(--accent2)';
+      dueDateEl.style.fontWeight = isPastDue ? '700' : '400';
+      if (isPastDue) dueDateEl.textContent += ' ⚠️ Overdue';
+    } else {
+      dueDateEl.textContent = '— Not set';
+      dueDateEl.style.color = 'var(--text-muted)';
+    }
+  }
 
   // Sub-fields (Quotation Number, Amount, etc.)
   const activeCat = parentCat || cat;
@@ -6619,7 +6654,7 @@ function tt_renderPlatformChart() {
 
 function tt_renderOverdueReport() {
   const todayKey=today();
-  const overdue=tt_tasks.filter(t=>!t.done&&t.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date));
+  const overdue=tt_tasks.filter(t=>tt_isOverdue(t)).sort((a,b)=>tt_overdueRef(a).localeCompare(tt_overdueRef(b)));
   const byAssignee={};overdue.forEach(t=>{const n=t.assignedTo||'Unassigned';if(!byAssignee[n])byAssignee[n]=[];byAssignee[n].push(t);});
   const mostOverdue=Object.keys(byAssignee).reduce((a,b)=>(byAssignee[a]?.length>=byAssignee[b]?.length?a:b),Object.keys(byAssignee)[0]||'—');
   document.getElementById('tt_overdueSummary').innerHTML=`<div class="asummary-card"><div class="asummary-val" style="color:#ff6b6b">${overdue.length}</div><div class="asummary-label">Overdue Tasks</div></div><div class="asummary-card"><div class="asummary-val" style="color:#ff9f43">${Object.keys(byAssignee).length}</div><div class="asummary-label">Members Affected</div></div><div class="asummary-card"><div class="asummary-val" style="color:#ff6b6b;font-size:1rem">${mostOverdue}</div><div class="asummary-label">Most Overdue</div></div>`;
@@ -6628,7 +6663,25 @@ function tt_renderOverdueReport() {
   list.innerHTML='';
   Object.keys(byAssignee).forEach(name=>{
     const header=document.createElement('div');header.style.cssText=`font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;color:#ff9f43;letter-spacing:0.08em;text-transform:uppercase;margin-top:8px;margin-bottom:4px`;header.innerHTML=`👤 ${name} <span style="background:rgba(255,107,107,0.15);color:#ff6b6b;border-radius:4px;padding:1px 7px;font-size:0.68rem">${byAssignee[name].length} overdue</span>`;list.appendChild(header);
-    byAssignee[name].forEach(t=>{const cat=tt_findCat(t.category);const days=Math.floor((new Date(todayKey)-new Date(t.date))/86400000);const item=document.createElement('div');item.style.cssText=`background:var(--surface2);border:1px solid rgba(255,107,107,0.25);border-radius:8px;padding:10px 14px;cursor:pointer;position:relative;overflow:hidden`;item.innerHTML=`<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#ff6b6b;border-radius:3px 0 0 3px"></div><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px"><div style="font-family:'Syne',sans-serif;font-weight:600;font-size:0.82rem;flex:1">${t.title}</div><span style="background:rgba(255,107,107,0.15);color:#ff6b6b;border-radius:4px;padding:2px 8px;font-size:0.68rem">⚠️ ${days}d overdue</span></div><div style="display:flex;gap:6px"><span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span><span style="font-size:0.68rem;color:var(--text-muted)">📅 ${t.date}</span></div>`;item.onclick=()=>{tt_closeAnalytics();tt_selectDay(t.date);};list.appendChild(item);});
+    byAssignee[name].forEach(t=>{
+      const cat=tt_findCat(t.category);
+      const ref=tt_overdueRef(t);
+      const days=Math.floor((new Date(todayKey)-new Date(ref))/86400000);
+      const item=document.createElement('div');
+      item.style.cssText=`background:var(--surface2);border:1px solid rgba(255,107,107,0.25);border-radius:8px;padding:10px 14px;cursor:pointer;position:relative;overflow:hidden;margin-bottom:6px`;
+      item.innerHTML=`<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#ff6b6b;border-radius:3px 0 0 3px"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px">
+          <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:0.82rem;flex:1">${t.title}</div>
+          <span style="background:rgba(255,107,107,0.15);color:#ff6b6b;border-radius:4px;padding:2px 8px;font-size:0.68rem">⚠️ ${days}d overdue</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon||''}${cat.label}</span>
+          <span style="font-size:0.68rem;color:var(--text-muted)">📅 Scheduled: ${t.date}</span>
+          ${t.dueDate ? `<span style="font-size:0.68rem;color:#ff6b6b;font-weight:600">⏰ Due: ${t.dueDate}</span>` : ''}
+        </div>`;
+      item.onclick=()=>{tt_closeAnalytics();tt_selectDay(t.date);};
+      list.appendChild(item);
+    });
   });
 }
 
@@ -6659,7 +6712,7 @@ window.tt_renderTrendChart=tt_renderTrendChart; window.tt_resetTrendDates=tt_res
 function tt_exportToExcel() {
   if(!window.XLSX){alert('Excel library not loaded yet.');return;}
   const wb=XLSX.utils.book_new();
-  const rows=tt_tasks.map(t=>{const cat=tt_findCat(t.category);return{'Title':t.title,'Category':cat.label,'Assigned To':t.assignedTo||'Unassigned','Created By':t.createdByName||'','Date':t.date,'Time':t.time||'','Priority':t.priority||'normal','Status':t.done?'Completed':(!t.done&&t.date<today()?'OVERDUE':'Pending'),'Notes':t.notes||''};});
+  const rows=tt_tasks.map(t=>{const cat=tt_findCat(t.category);return{'Title':t.title,'Category':cat.label,'Assigned To':t.assignedTo||'Unassigned','Created By':t.createdByName||'','Date':t.date,'Due Date':t.dueDate||'','Time':t.time||'','Priority':t.priority||'normal','Status':t.done?'Completed':(tt_isOverdue(t)?'OVERDUE':'Pending'),'Notes':t.notes||''};});
   const ws=XLSX.utils.json_to_sheet(rows); XLSX.utils.book_append_sheet(wb,ws,'All Tasks');
   XLSX.writeFile(wb,`CMG-TaskTracking-${today()}.xlsx`);
 }
@@ -6711,14 +6764,15 @@ function tt_generatePDFReport() {
 
   const filtered = tt_tasks.filter(t => t.date >= from && t.date <= to);
   const done     = filtered.filter(t => t.done).length;
-  const overdue  = filtered.filter(t => !t.done && t.date < todayKey).length;
+  const overdue  = filtered.filter(t => tt_isOverdue(t)).length;
   const rate     = filtered.length ? Math.round(done / filtered.length * 100) : 0;
 
   // ── helpers ──
   const fmtDate = iso => iso ? new Date(iso).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}) : '—';
   const leadtime = t => {
     if (!t.done || !t.doneAt || !t.date) return '—';
-    const d = Math.round((new Date(t.doneAt) - new Date(t.date+'T00:00:00')) / 86400000);
+    const ref = t.dueDate || t.date;
+    const d = Math.round((new Date(t.doneAt) - new Date(ref+'T00:00:00')) / 86400000);
     return d === 0 ? 'Same day' : d === 1 ? '1 day' : `${d} days`;
   };
   const doneStatus = t => {
@@ -6727,7 +6781,7 @@ function tt_generatePDFReport() {
       const lt = leadtime(t);
       return `<span style="color:#2ecc71;font-weight:700">✓ Done</span>${dt ? `<br><span style="font-size:10px;color:#555">${dt} · ${lt}</span>` : ''}`;
     }
-    if (!t.done && t.date < todayKey) return `<span style="color:#e74c3c;font-weight:700">⚠️ Overdue</span>`;
+    if (tt_isOverdue(t)) return `<span style="color:#e74c3c;font-weight:700">⚠️ Overdue</span>`;
     return `<span style="color:#c0392b">⏳ Pending</span>`;
   };
 
@@ -6747,6 +6801,7 @@ function tt_generatePDFReport() {
         <td style="padding:7px 8px">${cat.label}</td>
         <td style="padding:7px 8px">${t.assignedTo||'—'}</td>
         <td style="padding:7px 8px;text-align:center">${t.date}</td>
+        <td style="padding:7px 8px;text-align:center;color:${t.dueDate?'#e17055':'#999'};font-weight:${t.dueDate?'700':'400'}">${t.dueDate||'—'}</td>
         <td style="padding:7px 8px;text-align:center;text-transform:capitalize">${t.priority||'normal'}</td>
         <td style="padding:7px 8px">${doneStatus(t)}</td>
         <td style="padding:7px 8px;text-align:center">${leadtime(t)}</td>
@@ -6760,7 +6815,7 @@ function tt_generatePDFReport() {
     if (!assigneeMap[n]) assigneeMap[n]={total:0,done:0,overdue:0};
     assigneeMap[n].total++;
     if (t.done) assigneeMap[n].done++;
-    if (!t.done && t.date<todayKey) assigneeMap[n].overdue++;
+    if (tt_isOverdue(t)) assigneeMap[n].overdue++;
   });
   const assigneeRows = Object.keys(assigneeMap).map(name => {
     const r=assigneeMap[name]; const rA=r.total?Math.round(r.done/r.total*100):0;
@@ -6792,11 +6847,12 @@ function tt_generatePDFReport() {
 
   // ── Overdue rows ──
   const overdueRows = filtered
-    .filter(t=>!t.done&&t.date<todayKey)
-    .sort((a,b)=>a.date.localeCompare(b.date))
+    .filter(t => tt_isOverdue(t))
+    .sort((a,b) => tt_overdueRef(a).localeCompare(tt_overdueRef(b)))
     .map(t => {
       const cat=tt_findCat(t.category);
-      const days=Math.floor((new Date(todayKey)-new Date(t.date))/86400000);
+      const ref=tt_overdueRef(t);
+      const days=Math.floor((new Date(todayKey)-new Date(ref))/86400000);
       const comments = (t.comments||[]).map(c =>
         `<div style="margin-top:3px;font-size:10px;color:#555;padding-left:6px;border-left:2px solid #ddd">
           <strong>${c.authorName||c.author||'?'}</strong> · ${new Date(c.time).toLocaleDateString('en-PH',{month:'short',day:'numeric'})}:
@@ -6808,6 +6864,7 @@ function tt_generatePDFReport() {
         <td style="padding:7px 8px">${t.assignedTo||'—'}</td>
         <td style="padding:7px 8px">${cat.label}</td>
         <td style="padding:7px 8px;text-align:center">${t.date}</td>
+        <td style="padding:7px 8px;text-align:center;color:#e17055;font-weight:700">${t.dueDate||'—'}</td>
         <td style="padding:7px 8px;text-align:center;color:#e74c3c;font-weight:700">${days} day${days!==1?'s':''}</td>
       </tr>`;
     }).join('');
@@ -6896,9 +6953,10 @@ function tt_generatePDFReport() {
   <h2>⚠️ Overdue Tasks</h2>
   ${overdueRows ? `<table>
     <thead><tr>
-      <th class="left">Title</th>
+      <th class="left">Title &amp; Comments</th>
       <th class="left">Assigned To</th>
       <th class="left">Category</th>
+      <th class="num">Scheduled</th>
       <th class="num">Due Date</th>
       <th class="num">Days Overdue</th>
     </tr></thead>
@@ -6911,7 +6969,8 @@ function tt_generatePDFReport() {
       <th class="left">Title &amp; Comments</th>
       <th class="left">Category</th>
       <th class="left">Assigned To</th>
-      <th class="num">Date</th>
+      <th class="num">Scheduled</th>
+      <th class="num">Due Date</th>
       <th class="num">Priority</th>
       <th class="left">Status / Done Date</th>
       <th class="num">Leadtime</th>
@@ -7025,6 +7084,7 @@ function initTrackingTab() {
     document.getElementById('tt_taskNotes').value = '';
     document.getElementById('tt_taskPriority').value = 'normal';
     document.getElementById('tt_taskApproval').value = '';
+    document.getElementById('tt_taskDueDate').value = '';
     document.getElementById('tt_taskDate').value = tt_selectedDate || today();
     document.getElementById('tt_modalOverlay').classList.add('open');
     tt_buildCatSelector();
@@ -7049,6 +7109,7 @@ function initTrackingTab() {
       priority:   document.getElementById('tt_taskPriority').value,
       assignedTo: document.getElementById('tt_taskAssignee')?.value || '',
       approval:   document.getElementById('tt_taskApproval')?.value || '',
+      dueDate:    document.getElementById('tt_taskDueDate')?.value || '',
       ...subFieldData,
     };
     if (tt_editingTaskId) {
@@ -7080,10 +7141,10 @@ function initTrackingTab() {
 
   // Overdue check
   setTimeout(()=>{
-    const todayKey=today();
-    tt_tasks.filter(t=>!t.done&&t.date<todayKey).forEach(t=>{
+    tt_tasks.filter(t=>tt_isOverdue(t)).forEach(t=>{
       const already=tt_inAppNotifs.some(n=>n.body&&n.body.includes(t.title)&&n.title.includes('Overdue'));
-      if(!already)tt_addInAppNotif(`⚠️ Overdue Task`,`"${t.title}" was due on ${t.date}`,t.date);
+      const ref = tt_overdueRef(t);
+      if(!already)tt_addInAppNotif(`⚠️ Overdue Task`,`"${t.title}" was due on ${ref}`,t.date);
     });
   }, 2500);
 }
