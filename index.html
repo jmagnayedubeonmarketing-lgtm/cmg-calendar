@@ -2525,6 +2525,10 @@
       </div>
     </div>
     <div class="form-group">
+      <label class="form-label">📅 Due Date <span style="font-size:0.68rem;color:var(--text-muted);font-weight:400">(overdue reference — optional)</span></label>
+      <input class="form-input" type="date" id="taskDueDate" />
+    </div>
+    <div class="form-group">
       <label class="form-label">🔔 Remind Me Before</label>
       <select class="form-select" id="taskRemind">
         <option value="0">At task time</option>
@@ -2972,6 +2976,7 @@ function renderPanel() {
         <span class="task-tag" style="background:${cat.color}20;color:${cat.color}">${cat.icon ? cat.icon + ' ' : ''}${cat.label}</span>
         ${t.time ? `<span class="task-time">⏰ ${t.time}</span>` : ''}
         ${t.priority === 'high' ? `<span class="task-tag" style="background:#ff6b6b20;color:#ff6b6b">HIGH</span>` : ''}
+        ${t.dueDate ? `<span class="task-tag" style="background:rgba(225,112,85,0.15);color:#e17055;font-weight:600">📅 Due: ${t.dueDate}</span>` : ''}
         ${buildDoneTag(t)}
         ${t.approval ? `<span class="task-tag" style="background:rgba(162,155,254,0.15);color:#a29bfe;font-weight:600">🏷️ ${t.approval}</span>` : ''}
         ${t.assignedTo ? `<span class="task-tag" style="background:rgba(107,159,255,0.12);color:#74b9ff">👤 ${t.assignedTo}</span>` : ''}
@@ -3168,6 +3173,7 @@ function openEditModal(idx) {
   document.getElementById('taskNotes').value = t.notes || '';
   document.getElementById('taskPriority').value = t.priority || 'normal';
   document.getElementById('taskApproval').value = t.approval || '';
+  document.getElementById('taskDueDate').value = t.dueDate || '';
   if (document.getElementById('taskAssignee')) document.getElementById('taskAssignee').value = t.assignedTo || '';
   selectedCat = t.category;
   buildCatSelector();
@@ -3184,6 +3190,7 @@ document.getElementById('openModal').onclick = () => {
   document.getElementById('taskNotes').value = '';
   document.getElementById('taskPriority').value = 'normal';
   document.getElementById('taskApproval').value = '';
+  document.getElementById('taskDueDate').value = '';
   document.getElementById('modalOverlay').classList.add('open');
   document.getElementById('taskDate').value = selectedDate || today();
   buildCatSelector();
@@ -5400,6 +5407,7 @@ document.getElementById('saveTask').addEventListener('click', async () => {
     priority: document.getElementById('taskPriority').value,
     assignedTo: document.getElementById('taskAssignee')?.value || '',
     approval: document.getElementById('taskApproval')?.value || '',
+    dueDate:  document.getElementById('taskDueDate')?.value || '',
   };
 
   if (editingTaskId) {
