@@ -4181,59 +4181,63 @@ function generatePDFReport() {
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <title>CMG ${periodLabel} Report — ${rangeLabel}</title>
   <style>
-    @page { size: legal landscape; margin: 18mm 16mm; }
-    * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 24px 28px; color: #1a1a1a; font-size: 12px; max-width: 100%; margin: 0 auto; background: #fff; }
+    /* ═══ PAGE SETUP ═══ */
+    @page { size: legal landscape; margin: 12mm 14mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1a1a1a; background: #fff; width: 100%; }
+    body { padding: 20px 24px; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-    /* ── Header ── */
-    .report-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0a0a0f; padding-bottom: 12px; margin-bottom: 6px; }
-    .report-logo { font-size: 10px; color: #666; letter-spacing: 0.06em; text-transform: uppercase; }
-    h1 { color: #0a0a0f; font-size: 20px; font-weight: 800; margin: 0; text-align: center; flex: 1; }
-    .badge { display: inline-block; background: #0a0a0f; color: #c8f135; border-radius: 4px; padding: 3px 10px; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-left: 8px; vertical-align: middle; }
-    .meta { color: #555; font-size: 11px; margin: 6px 0 18px; text-align: center; letter-spacing: 0.02em; }
+    /* ═══ REPORT HEADER ═══ */
+    .report-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0a0a0f; padding-bottom: 10px; margin-bottom: 4px; }
+    .report-side { font-size: 10px; color: #666; letter-spacing: 0.06em; text-transform: uppercase; min-width: 160px; }
+    .report-side.right { text-align: right; }
+    .report-title { flex: 1; text-align: center; font-size: 19px; font-weight: 800; color: #0a0a0f; line-height: 1.2; }
+    .badge { display: inline-block; background: #0a0a0f; color: #c8f135; border-radius: 4px; padding: 2px 10px; font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; margin-left: 8px; vertical-align: middle; }
+    .meta { text-align: center; font-size: 11px; color: #555; margin: 5px 0 14px; }
 
-    /* ── Summary Cards ── */
-    .stats { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
-    .stat { background: #f7f7f7; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 18px; text-align: center; min-width: 90px; }
-    .stat-val { font-size: 22px; font-weight: 800; line-height: 1.1; }
-    .stat-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+    /* ═══ STAT CARDS ═══ */
+    .stats { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .stat { background: #f7f7f7; border: 1px solid #ddd; border-radius: 8px; padding: 10px 20px; text-align: center; min-width: 100px; }
+    .stat-val { font-size: 24px; font-weight: 800; line-height: 1.1; }
+    .stat-label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-top: 3px; }
 
-    /* ── Section Headings ── */
-    h2 { color: #fff; background: #0a0a0f; font-size: 13px; font-weight: 700; margin: 24px 0 0; padding: 7px 14px; border-radius: 6px 6px 0 0; letter-spacing: 0.04em; text-transform: uppercase; }
+    /* ═══ SECTION HEADINGS ═══ */
+    .section-head { background: #0a0a0f !important; color: #ffffff !important; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 7px 14px; border-radius: 6px 6px 0 0; margin-top: 18px; margin-bottom: 0; display: block; }
 
-    /* ── Tables ── */
-    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; border: 1px solid #d8d8d8; }
-    thead { background: #1e1e2e; color: white; }
-    thead th { padding: 8px 10px; font-weight: 700; font-size: 11px; letter-spacing: 0.03em; border-right: 1px solid #3a3a5a; }
+    /* ═══ TABLES ═══ */
+    .table-wrap { border: 1px solid #ddd; border-top: none; border-radius: 0 0 6px 6px; overflow: hidden; margin-bottom: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    thead tr { background: #1e1e2e !important; }
+    thead th { color: #ffffff !important; padding: 8px 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; border-right: 1px solid #3a3a55; white-space: nowrap; }
     thead th:last-child { border-right: none; }
     thead th.num { text-align: center; }
     thead th.left { text-align: left; }
-    tbody tr { border-bottom: 1px solid #eaeaea; }
-    tbody tr:nth-child(even) { background: #f8f8fb; }
-    tbody tr:hover { background: #f0f4ff; }
-    tbody td { padding: 7px 10px; vertical-align: top; font-size: 12px; border-right: 1px solid #eaeaea; }
+    tbody tr { border-bottom: 1px solid #ebebeb; }
+    tbody tr:nth-child(even) { background: #f6f6fb; }
+    tbody td { padding: 7px 10px; vertical-align: top; font-size: 12px; border-right: 1px solid #ebebeb; line-height: 1.4; }
     tbody td:last-child { border-right: none; }
     tbody td.num { text-align: center; }
 
-    /* ── Status & Priority Badges ── */
-    .no-data { text-align: center; padding: 14px; color: #999; background: #f9f9f9; border-radius: 0 0 6px 6px; border: 1px solid #e0e0e0; font-size: 12px; }
-    .no-overdue { text-align: center; padding: 14px; color: #27ae60; font-weight: 700; background: #f0fff6; border-radius: 0 0 6px 6px; border: 1px solid #b2dfdb; font-size: 12px; }
+    /* ═══ MISC ═══ */
+    .no-data { text-align: center; padding: 14px; color: #999; font-size: 12px; background: #f9f9f9; border: 1px solid #ddd; border-top: none; border-radius: 0 0 6px 6px; margin-bottom: 16px; }
+    .no-overdue { text-align: center; padding: 14px; color: #27ae60; font-weight: 700; background: #f0fff6; border: 1px solid #b2dfdb; border-top: none; border-radius: 0 0 6px 6px; margin-bottom: 16px; }
 
-    /* ── Print ── */
+    /* ═══ PRINT ═══ */
     @media print {
-      @page { size: legal landscape; margin: 14mm 12mm; }
-      body { padding: 0; font-size: 12px; }
-      h2 { page-break-after: avoid; }
-      table { page-break-inside: auto; }
+      @page { size: legal landscape; margin: 10mm 12mm; }
+      body { padding: 0; }
+      .section-head { page-break-after: avoid; }
+      .table-wrap { page-break-inside: auto; }
       tr { page-break-inside: avoid; }
     }
   </style></head><body>
-  <div class="report-header">
-    <div class="report-logo">Dubeon Corporation</div>
-    <h1>📋 CMG SocMed Activities &amp; Events Calendar <span class="badge">${periodLabel} Report</span></h1>
-    <div class="report-logo" style="text-align:right">Generated: ${new Date().toLocaleString()}</div>
-  </div>
 
+  <div class="report-header">
+    <div class="report-side">Dubeon Corporation</div>
+    <div class="report-title">📋 CMG SocMed Activities &amp; Events Calendar <span class="badge">${periodLabel} Report</span></div>
+    <div class="report-side right">Generated: ${new Date().toLocaleString()}</div>
+  </div>
   <div class="meta">Period: <strong>${from}</strong> to <strong>${to}</strong></div>
 
   <div class="stats">
@@ -4244,20 +4248,20 @@ function generatePDFReport() {
     <div class="stat"><div class="stat-val" style="color:#0984e3">${rate}%</div><div class="stat-label">Completion Rate</div></div>
   </div>
 
-  <h2>👤 By Assignee</h2>
-  ${assigneeRows ? `<table><thead><tr><th class="left">Assignee</th><th class="num">Total</th><th class="num">Completed</th><th class="num">Pending</th><th class="num">Overdue</th><th class="num">Rate</th></tr></thead><tbody>${assigneeRows}</tbody></table>` : '<div class="no-data">No assignee data.</div>'}
+  <div class="section-head">👤 By Assignee</div>
+  ${assigneeRows ? `<div class="table-wrap"><table><thead><tr><th class="left">Assignee</th><th class="num">Total</th><th class="num">Completed</th><th class="num">Pending</th><th class="num">Overdue</th><th class="num">Rate</th></tr></thead><tbody>${assigneeRows}</tbody></table></div>` : '<div class="no-data">No assignee data.</div>'}
 
-  <h2>📱 Platform Breakdown</h2>
-  <table><thead><tr><th class="left">Platform</th><th class="num">Total</th><th class="num">Completed</th><th class="num">Pending</th><th class="num">Rate</th></tr></thead><tbody>${platRows}</tbody></table>
+  <div class="section-head">📱 Platform Breakdown</div>
+  <div class="table-wrap"><table><thead><tr><th class="left">Platform</th><th class="num">Total</th><th class="num">Completed</th><th class="num">Pending</th><th class="num">Rate</th></tr></thead><tbody>${platRows}</tbody></table></div>
 
-  <h2>⏳ Pending Tasks</h2>
-  ${pendingRows ? `<table><thead><tr>${TASK_TH}</tr></thead><tbody>${pendingRows}</tbody></table>` : '<div class="no-data">No pending tasks for this period. 🎉</div>'}
+  <div class="section-head">⏳ Pending Tasks</div>
+  ${pendingRows ? `<div class="table-wrap"><table><thead><tr>${TASK_TH}</tr></thead><tbody>${pendingRows}</tbody></table></div>` : '<div class="no-data">No pending tasks for this period. 🎉</div>'}
 
-  <h2>⚠️ Overdue Tasks</h2>
-  ${overdueRows ? `<table><thead><tr><th class="left">Title &amp; Comments</th><th class="left">Assigned To</th><th class="left">Category</th><th class="num">Scheduled</th><th class="num">Due Date</th><th class="num">Days Overdue</th></tr></thead><tbody>${overdueRows}</tbody></table>` : '<div class="no-overdue">🎉 No overdue tasks!</div>'}
+  <div class="section-head">⚠️ Overdue Tasks</div>
+  ${overdueRows ? `<div class="table-wrap"><table><thead><tr><th class="left">Title &amp; Comments</th><th class="left">Assigned To</th><th class="left">Category</th><th class="num">Scheduled</th><th class="num">Due Date</th><th class="num">Days Overdue</th></tr></thead><tbody>${overdueRows}</tbody></table></div>` : '<div class="no-overdue">🎉 No overdue tasks!</div>'}
 
-  <h2>📋 All Tasks in Period</h2>
-  ${taskRows ? `<table><thead><tr>${TASK_TH}</tr></thead><tbody>${taskRows}</tbody></table>` : '<div class="no-data">No tasks found.</div>'}
+  <div class="section-head">📋 All Tasks in Period</div>
+  ${taskRows ? `<div class="table-wrap"><table><thead><tr>${TASK_TH}</tr></thead><tbody>${taskRows}</tbody></table></div>` : '<div class="no-data">No tasks found.</div>'}
 
   </body></html>`;
 
@@ -6993,65 +6997,225 @@ function tt_generatePDFReport() {
   <title>CMG Task Tracking — ${periodLabel} Report</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>
   <style>
-    @page { size: legal landscape; margin: 18mm 16mm; }
-    * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 24px 28px; color: #1a1a1a; font-size: 12px; max-width: 100%; margin: 0 auto; background: #fff; }
+    /* ═══ PAGE SETUP ═══ */
+    @page {
+      size: legal landscape;
+      margin: 12mm 14mm;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* ── Header ── */
-    .report-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0a0a0f; padding-bottom: 12px; margin-bottom: 6px; }
-    .report-logo { font-size: 10px; color: #666; letter-spacing: 0.06em; text-transform: uppercase; }
-    h1 { color: #0a0a0f; font-size: 20px; font-weight: 800; margin: 0; text-align: center; flex: 1; }
-    .badge { display: inline-block; background: #0a0a0f; color: #c8f135; border-radius: 4px; padding: 3px 10px; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-left: 8px; vertical-align: middle; }
-    .meta { color: #555; font-size: 11px; margin: 6px 0 18px; text-align: center; letter-spacing: 0.02em; }
+    html, body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 12px;
+      color: #1a1a1a;
+      background: #fff;
+      width: 100%;
+    }
 
-    /* ── Summary Cards ── */
-    .stats { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
-    .stat { background: #f7f7f7; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 18px; text-align: center; min-width: 90px; }
-    .stat-val { font-size: 22px; font-weight: 800; line-height: 1.1; }
-    .stat-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+    body {
+      padding: 20px 24px;
+    }
 
-    /* ── Section Headings ── */
-    h2 { color: #fff; background: #0a0a0f; font-size: 13px; font-weight: 700; margin: 24px 0 0; padding: 7px 14px; border-radius: 6px 6px 0 0; letter-spacing: 0.04em; text-transform: uppercase; }
+    /* Force colors to print */
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-    /* ── Tables ── */
-    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; border: 1px solid #d8d8d8; }
-    thead { background: #1e1e2e; color: white; }
-    thead th { padding: 8px 10px; font-weight: 700; font-size: 11px; letter-spacing: 0.03em; border-right: 1px solid #3a3a5a; }
+    /* ═══ REPORT HEADER ═══ */
+    .report-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid #0a0a0f;
+      padding-bottom: 10px;
+      margin-bottom: 4px;
+    }
+    .report-side {
+      font-size: 10px;
+      color: #666;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      min-width: 160px;
+    }
+    .report-side.right { text-align: right; }
+    .report-title {
+      flex: 1;
+      text-align: center;
+      font-size: 19px;
+      font-weight: 800;
+      color: #0a0a0f;
+      line-height: 1.2;
+    }
+    .badge {
+      display: inline-block;
+      background: #0a0a0f;
+      color: #c8f135;
+      border-radius: 4px;
+      padding: 2px 10px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .meta {
+      text-align: center;
+      font-size: 11px;
+      color: #555;
+      margin: 5px 0 14px;
+    }
+
+    /* ═══ STAT CARDS ═══ */
+    .stats {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .stat {
+      background: #f7f7f7;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px 20px;
+      text-align: center;
+      min-width: 100px;
+    }
+    .stat-val {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .stat-label {
+      font-size: 9px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-top: 3px;
+    }
+
+    /* ═══ SECTION HEADINGS ═══ */
+    .section-head {
+      background: #0a0a0f !important;
+      color: #ffffff !important;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 7px 14px;
+      border-radius: 6px 6px 0 0;
+      margin-top: 18px;
+      margin-bottom: 0;
+      display: block;
+    }
+
+    /* ═══ CHARTS ═══ */
+    .charts-wrap {
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      background: #fafafa;
+      padding: 14px 12px;
+      margin-bottom: 16px;
+    }
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+    .chart-box {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+    }
+    .chart-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 8px;
+    }
+    .chart-box canvas {
+      width: 100% !important;
+      height: 180px !important;
+    }
+
+    /* ═══ TABLES ═══ */
+    .table-wrap {
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    thead tr {
+      background: #1e1e2e !important;
+    }
+    thead th {
+      color: #ffffff !important;
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      border-right: 1px solid #3a3a55;
+      white-space: nowrap;
+    }
     thead th:last-child { border-right: none; }
     thead th.num { text-align: center; }
     thead th.left { text-align: left; }
-    tbody tr { border-bottom: 1px solid #eaeaea; }
-    tbody tr:nth-child(even) { background: #f8f8fb; }
-    tbody td { padding: 7px 10px; vertical-align: top; font-size: 12px; border-right: 1px solid #eaeaea; }
+    tbody tr { border-bottom: 1px solid #ebebeb; }
+    tbody tr:nth-child(even) { background: #f6f6fb; }
+    tbody td {
+      padding: 7px 10px;
+      vertical-align: top;
+      font-size: 12px;
+      border-right: 1px solid #ebebeb;
+      line-height: 1.4;
+    }
     tbody td:last-child { border-right: none; }
+    tbody td.num { text-align: center; }
 
-    /* ── Charts ── */
-    .charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 0 0 20px; }
-    .chart-box { background: #f8f8fb; border: 1px solid #e0e0e0; border-radius: 0 0 8px 8px; padding: 14px; text-align: center; }
-    .chart-box h3 { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 10px; font-weight: 700; }
-    .chart-box canvas { max-height: 180px; }
+    /* ═══ MISC ═══ */
+    .no-data {
+      text-align: center; padding: 14px;
+      color: #999; font-size: 12px;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      margin-bottom: 16px;
+    }
+    .no-overdue {
+      text-align: center; padding: 14px;
+      color: #27ae60; font-weight: 700;
+      background: #f0fff6;
+      border: 1px solid #b2dfdb;
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      margin-bottom: 16px;
+    }
 
-    /* ── Misc ── */
-    .priority-normal { color: #555; }
-    .priority-high { color: #e74c3c; font-weight: 700; }
-    .no-data { text-align: center; padding: 14px; color: #999; background: #f9f9f9; border-radius: 0 0 6px 6px; border: 1px solid #e0e0e0; font-size: 12px; }
-    .no-overdue { text-align: center; padding: 14px; color: #27ae60; font-weight: 700; background: #f0fff6; border-radius: 0 0 6px 6px; border: 1px solid #b2dfdb; font-size: 12px; }
-
-    /* ── Print ── */
+    /* ═══ PRINT RULES ═══ */
     @media print {
-      @page { size: legal landscape; margin: 14mm 12mm; }
-      body { padding: 0; font-size: 12px; }
-      h2 { page-break-after: avoid; }
-      table { page-break-inside: auto; }
+      @page { size: legal landscape; margin: 10mm 12mm; }
+      body { padding: 0; }
+      .section-head { page-break-after: avoid; }
+      .table-wrap, .charts-wrap { page-break-inside: auto; }
       tr { page-break-inside: avoid; }
-      .charts-row { grid-template-columns: 1fr 1fr 1fr; }
     }
   </style></head><body>
 
   <div class="report-header">
-    <div class="report-logo">Dubeon Corporation</div>
-    <h1>📋 CMG Task Tracking <span class="badge">${periodLabel} Report</span></h1>
-    <div class="report-logo" style="text-align:right">Generated: ${new Date().toLocaleString()}</div>
+    <div class="report-side">Dubeon Corporation</div>
+    <div class="report-title">📋 CMG Task Tracking <span class="badge">${periodLabel} Report</span></div>
+    <div class="report-side right">Generated: ${new Date().toLocaleString()}</div>
   </div>
   <div class="meta">Period: <strong>${from}</strong> to <strong>${to}</strong></div>
 
@@ -7064,15 +7228,17 @@ function tt_generatePDFReport() {
   </div>
 
   <!-- CHARTS -->
-  <h2>📊 Visual Summary</h2>
-  <div class="charts-row" style="border:1px solid #d8d8d8;border-radius:0 0 8px 8px;padding:16px;margin-bottom:20px;background:#fafafa;">
-    <div class="chart-box"><h3>Task Status</h3><canvas id="chartStatus"></canvas></div>
-    <div class="chart-box"><h3>By Assignee</h3><canvas id="chartAssignee"></canvas></div>
-    <div class="chart-box"><h3>By Category</h3><canvas id="chartCategory"></canvas></div>
+  <div class="section-head">📊 Visual Summary</div>
+  <div class="charts-wrap">
+    <div class="charts-row">
+      <div class="chart-box"><div class="chart-title">Task Status</div><canvas id="chartStatus"></canvas></div>
+      <div class="chart-box"><div class="chart-title">By Assignee</div><canvas id="chartAssignee"></canvas></div>
+      <div class="chart-box"><div class="chart-title">By Category</div><canvas id="chartCategory"></canvas></div>
+    </div>
   </div>
 
-  <h2>👤 By Assignee</h2>
-  ${assigneeRows ? `<table>
+  <div class="section-head">👤 By Assignee</div>
+  ${assigneeRows ? `<div class="table-wrap"><table>
     <thead><tr>
       <th class="left">Assignee</th>
       <th class="num">Total</th>
@@ -7082,10 +7248,10 @@ function tt_generatePDFReport() {
       <th class="num">Rate</th>
     </tr></thead>
     <tbody>${assigneeRows}</tbody>
-  </table>` : '<div class="no-data">No assignee data for this period.</div>'}
+  </table></div>` : '<div class="no-data">No assignee data for this period.</div>'}
 
-  <h2>🗂️ By Category</h2>
-  ${catRows ? `<table>
+  <div class="section-head">🗂️ By Category</div>
+  ${catRows ? `<div class="table-wrap"><table>
     <thead><tr>
       <th class="left">Category</th>
       <th class="num">Total</th>
@@ -7094,10 +7260,10 @@ function tt_generatePDFReport() {
       <th class="num">Rate</th>
     </tr></thead>
     <tbody>${catRows}</tbody>
-  </table>` : '<div class="no-data">No category data for this period.</div>'}
+  </table></div>` : '<div class="no-data">No category data for this period.</div>'}
 
-  <h2>⏳ Pending Tasks</h2>
-  ${pendingRows ? `<table>
+  <div class="section-head">⏳ Pending Tasks</div>
+  ${pendingRows ? `<div class="table-wrap"><table>
     <thead><tr>
       <th class="left">Title &amp; Comments</th>
       <th class="left">Description</th>
@@ -7110,10 +7276,10 @@ function tt_generatePDFReport() {
       <th class="num">Leadtime</th>
     </tr></thead>
     <tbody>${pendingRows}</tbody>
-  </table>` : '<div class="no-data">No pending tasks for this period. 🎉</div>'}
+  </table></div>` : '<div class="no-data">No pending tasks for this period. 🎉</div>'}
 
-  <h2>⚠️ Overdue Tasks</h2>
-  ${overdueRows ? `<table>
+  <div class="section-head">⚠️ Overdue Tasks</div>
+  ${overdueRows ? `<div class="table-wrap"><table>
     <thead><tr>
       <th class="left">Title &amp; Comments</th>
       <th class="left">Assigned To</th>
@@ -7123,10 +7289,10 @@ function tt_generatePDFReport() {
       <th class="num">Days Overdue</th>
     </tr></thead>
     <tbody>${overdueRows}</tbody>
-  </table>` : '<div class="no-overdue">🎉 No overdue tasks in this period!</div>'}
+  </table></div>` : '<div class="no-overdue">🎉 No overdue tasks in this period!</div>'}
 
-  <h2>📋 All Tasks in Period</h2>
-  ${taskRows ? `<table>
+  <div class="section-head">📋 All Tasks in Period</div>
+  ${taskRows ? `<div class="table-wrap"><table>
     <thead><tr>
       <th class="left">Title &amp; Comments</th>
       <th class="left">Description</th>
@@ -7139,21 +7305,26 @@ function tt_generatePDFReport() {
       <th class="num">Leadtime</th>
     </tr></thead>
     <tbody>${taskRows}</tbody>
-  </table>` : '<div class="no-data">No tasks found for this period.</div>'}
+  </table></div>` : '<div class="no-data">No tasks found for this period.</div>'}
 
   <script>
     const statusData  = ${statusChartData};
     const assigneeData= ${assigneeChartData};
     const catData2    = ${catChartData};
 
+    const FONT = { family: "'Segoe UI', Arial, sans-serif" };
+
     // Status doughnut
     new Chart(document.getElementById('chartStatus'), {
       type: 'doughnut',
       data: {
         labels: statusData.map(d=>d.label),
-        datasets:[{ data: statusData.map(d=>d.val), backgroundColor: statusData.map(d=>d.color), borderWidth:2 }]
+        datasets:[{ data: statusData.map(d=>d.val), backgroundColor: statusData.map(d=>d.color), borderWidth: 2 }]
       },
-      options:{ responsive:true, plugins:{ legend:{ position:'bottom', labels:{ font:{size:11} } } } }
+      options:{
+        responsive: false,
+        plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11, family: FONT.family }, padding: 10, boxWidth: 12 } } }
+      }
     });
 
     // Assignee bar
@@ -7163,13 +7334,20 @@ function tt_generatePDFReport() {
         labels: assigneeData.map(d=>d.name),
         datasets:[
           { label:'Completed', data: assigneeData.map(d=>d.done),    backgroundColor:'#2ecc71cc', borderRadius:4 },
-          { label:'Pending',   data: assigneeData.map(d=>d.pending), backgroundColor:'#e74c3c66', borderRadius:4 }
+          { label:'Pending',   data: assigneeData.map(d=>d.pending), backgroundColor:'#e74c3c99', borderRadius:4 }
         ]
       },
-      options:{ responsive:true, scales:{ x:{stacked:true,ticks:{font:{size:10}}}, y:{stacked:true,beginAtZero:true,ticks:{font:{size:10}}} }, plugins:{ legend:{ position:'bottom', labels:{ font:{size:10} } } } }
+      options:{
+        responsive: false,
+        scales:{
+          x:{ stacked:true, ticks:{ font:{ size:11, family: FONT.family } }, grid:{ color:'#eee' } },
+          y:{ stacked:true, beginAtZero:true, ticks:{ font:{ size:11, family: FONT.family } }, grid:{ color:'#eee' } }
+        },
+        plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11, family: FONT.family }, padding:10, boxWidth:12 } } }
+      }
     });
 
-    // Category bar (only categories with tasks)
+    // Category bar
     const catFiltered = catData2.filter(c=>c.total>0);
     new Chart(document.getElementById('chartCategory'), {
       type: 'bar',
@@ -7177,10 +7355,18 @@ function tt_generatePDFReport() {
         labels: catFiltered.map(c=>c.label.replace(/^[^ ]+ /,'')),
         datasets:[
           { label:'Done',    data: catFiltered.map(c=>c.done),    backgroundColor: catFiltered.map(c=>c.color+'cc'), borderRadius:4 },
-          { label:'Pending', data: catFiltered.map(c=>c.pending), backgroundColor: catFiltered.map(c=>c.color+'44'), borderRadius:4 }
+          { label:'Pending', data: catFiltered.map(c=>c.pending), backgroundColor: catFiltered.map(c=>c.color+'55'), borderRadius:4 }
         ]
       },
-      options:{ responsive:true, indexAxis:'y', scales:{ x:{stacked:true,beginAtZero:true,ticks:{font:{size:10}}}, y:{stacked:true,ticks:{font:{size:9}}} }, plugins:{ legend:{ position:'bottom', labels:{ font:{size:10} } } } }
+      options:{
+        responsive: false,
+        indexAxis:'y',
+        scales:{
+          x:{ stacked:true, beginAtZero:true, ticks:{ font:{ size:10, family: FONT.family } }, grid:{ color:'#eee' } },
+          y:{ stacked:true, ticks:{ font:{ size:10, family: FONT.family } }, grid:{ color:'#eee' } }
+        },
+        plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11, family: FONT.family }, padding:10, boxWidth:12 } } }
+      }
     });
   <\/script>
   </body></html>`;
