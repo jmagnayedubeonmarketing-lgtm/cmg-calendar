@@ -4176,6 +4176,27 @@ function generatePDFReport() {
       </tr>`;
     }).join('');
 
+  // ── Done rows ──
+  const socDoneRows = filtered
+    .filter(t => t.done)
+    .sort((a,b) => (a.doneAt||a.date).localeCompare(b.doneAt||b.date))
+    .map(t => {
+      const cat = CATEGORIES.find(c => c.id === t.category) || CATEGORIES[CATEGORIES.length-1];
+      const cmts = commentsHtml(t);
+      const doneDate = t.doneAt ? fmtDate(t.doneAt) : '—';
+      return `<tr style="border-bottom:1px solid #eee;vertical-align:top">
+        <td style="padding:7px 8px">${t.title}${cmts?`<div style="margin-top:4px">${cmts}</div>`:''}</td>
+        <td style="padding:7px 8px">${t.notes||'—'}</td>
+        <td style="padding:7px 8px">${cat.label}</td>
+        <td style="padding:7px 8px">${t.assignedTo||'—'}</td>
+        <td style="padding:7px 8px;text-align:center">${t.date}</td>
+        <td style="padding:7px 8px;text-align:center;color:${t.dueDate?'#e17055':'#999'};font-weight:${t.dueDate?'700':'400'}">${t.dueDate||'—'}</td>
+        <td style="padding:7px 8px;text-align:center;text-transform:capitalize">${t.priority||'normal'}</td>
+        <td style="padding:7px 8px;color:#2ecc71;font-weight:700">${doneDate}</td>
+        <td style="padding:7px 8px;text-align:center">${calcLeadtime(t)}</td>
+      </tr>`;
+    }).join('');
+
   const TASK_TH = `<th class="left">Title &amp; Comments</th><th class="left">Description</th><th class="left">Category</th><th class="left">Assigned To</th><th class="num">Scheduled</th><th class="num">Due Date</th><th class="num">Priority</th><th class="left">Status / Done Date</th><th class="num">Leadtime</th>`;
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
@@ -4260,8 +4281,8 @@ function generatePDFReport() {
   <div class="section-head">⚠️ Overdue Tasks</div>
   ${overdueRows ? `<div class="table-wrap"><table><thead><tr><th class="left">Title &amp; Comments</th><th class="left">Assigned To</th><th class="left">Category</th><th class="num">Scheduled</th><th class="num">Due Date</th><th class="num">Days Overdue</th></tr></thead><tbody>${overdueRows}</tbody></table></div>` : '<div class="no-overdue">🎉 No overdue tasks!</div>'}
 
-  <div class="section-head">📋 All Tasks in Period</div>
-  ${taskRows ? `<div class="table-wrap"><table><thead><tr>${TASK_TH}</tr></thead><tbody>${taskRows}</tbody></table></div>` : '<div class="no-data">No tasks found.</div>'}
+  <div class="section-head">✅ Done Tasks</div>
+  ${socDoneRows ? `<div class="table-wrap"><table><thead><tr><th class="left">Title &amp; Comments</th><th class="left">Description</th><th class="left">Category</th><th class="left">Assigned To</th><th class="num">Scheduled</th><th class="num">Due Date</th><th class="num">Priority</th><th class="left">Done Date</th><th class="num">Leadtime</th></tr></thead><tbody>${socDoneRows}</tbody></table></div>` : '<div class="no-data">No completed tasks for this period.</div>'}
 
   </body></html>`;
 
@@ -6989,6 +7010,31 @@ function tt_generatePDFReport() {
         <td style="padding:7px 8px;text-align:center">—</td>
       </tr>`;
     }).join('');
+  // ── Done rows ──
+  const doneRows = filtered
+    .filter(t => t.done)
+    .sort((a,b) => (a.doneAt||a.date).localeCompare(b.doneAt||b.date))
+    .map(t => {
+      const cat = tt_findCat(t.category);
+      const comments = (t.comments||[]).map(c =>
+        `<div style="margin-top:3px;font-size:10px;color:#555;padding-left:6px;border-left:2px solid #ddd">
+          <strong>${c.authorName||c.author||'?'}</strong> · ${new Date(c.time).toLocaleDateString('en-PH',{month:'short',day:'numeric'})}:
+          ${c.text}
+        </div>`
+      ).join('');
+      return `<tr style="border-bottom:1px solid #eee;vertical-align:top">
+        <td style="padding:7px 8px">${t.title}${comments ? `<div style="margin-top:4px">${comments}</div>` : ''}</td>
+        <td style="padding:7px 8px">${t.notes||'—'}</td>
+        <td style="padding:7px 8px">${cat.label}</td>
+        <td style="padding:7px 8px">${t.assignedTo||'—'}</td>
+        <td style="padding:7px 8px;text-align:center">${t.date}</td>
+        <td style="padding:7px 8px;text-align:center;color:${t.dueDate?'#e17055':'#999'};font-weight:${t.dueDate?'700':'400'}">${t.dueDate||'—'}</td>
+        <td style="padding:7px 8px;text-align:center;text-transform:capitalize">${t.priority||'normal'}</td>
+        <td style="padding:7px 8px;color:#2ecc71;font-weight:700">${t.doneAt ? fmtDate(t.doneAt) : '—'}</td>
+        <td style="padding:7px 8px;text-align:center">${leadtime(t)}</td>
+      </tr>`;
+    }).join('');
+
   const assigneeChartData = JSON.stringify(Object.entries(assigneeMap).map(([n,r])=>({name:n,done:r.done,pending:r.total-r.done})));
   const catChartData      = JSON.stringify(catData.map(c=>({label:c.label,total:c.total,done:c.done,pending:c.pending,color:c.color})));
   const statusChartData   = JSON.stringify([{label:'Completed',val:done,color:'#2ecc71'},{label:'Pending',val:filtered.length-done-overdue,color:'#fdcb6e'},{label:'Overdue',val:overdue,color:'#e74c3c'}]);
@@ -7119,8 +7165,9 @@ function tt_generatePDFReport() {
     }
     .charts-row {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 240px 1fr 1fr;
       gap: 14px;
+      align-items: start;
     }
     .chart-box {
       background: #fff;
@@ -7128,6 +7175,7 @@ function tt_generatePDFReport() {
       border-radius: 6px;
       padding: 12px;
       text-align: center;
+      overflow: hidden;
     }
     .chart-title {
       font-size: 10px;
@@ -7138,8 +7186,8 @@ function tt_generatePDFReport() {
       margin-bottom: 8px;
     }
     .chart-box canvas {
-      width: 100% !important;
-      height: 180px !important;
+      display: block;
+      max-width: 100%;
     }
 
     /* ═══ TABLES ═══ */
@@ -7291,8 +7339,8 @@ function tt_generatePDFReport() {
     <tbody>${overdueRows}</tbody>
   </table></div>` : '<div class="no-overdue">🎉 No overdue tasks in this period!</div>'}
 
-  <div class="section-head">📋 All Tasks in Period</div>
-  ${taskRows ? `<div class="table-wrap"><table>
+  <div class="section-head">✅ Done Tasks</div>
+  ${doneRows ? `<div class="table-wrap"><table>
     <thead><tr>
       <th class="left">Title &amp; Comments</th>
       <th class="left">Description</th>
@@ -7301,11 +7349,11 @@ function tt_generatePDFReport() {
       <th class="num">Scheduled</th>
       <th class="num">Due Date</th>
       <th class="num">Priority</th>
-      <th class="left">Status / Done Date</th>
+      <th class="left">Done Date</th>
       <th class="num">Leadtime</th>
     </tr></thead>
-    <tbody>${taskRows}</tbody>
-  </table></div>` : '<div class="no-data">No tasks found for this period.</div>'}
+    <tbody>${doneRows}</tbody>
+  </table></div>` : '<div class="no-data">No completed tasks for this period.</div>'}
 
   <script>
     const statusData  = ${statusChartData};
@@ -7314,8 +7362,11 @@ function tt_generatePDFReport() {
 
     const FONT = { family: "'Segoe UI', Arial, sans-serif" };
 
-    // Status doughnut
-    new Chart(document.getElementById('chartStatus'), {
+    // Status doughnut — fixed square size
+    const statusCanvas = document.getElementById('chartStatus');
+    statusCanvas.width  = 220;
+    statusCanvas.height = 220;
+    new Chart(statusCanvas, {
       type: 'doughnut',
       data: {
         labels: statusData.map(d=>d.label),
@@ -7323,12 +7374,15 @@ function tt_generatePDFReport() {
       },
       options:{
         responsive: false,
+        maintainAspectRatio: false,
         plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11, family: FONT.family }, padding: 10, boxWidth: 12 } } }
       }
     });
 
-    // Assignee bar
-    new Chart(document.getElementById('chartAssignee'), {
+    // Assignee bar — fixed height
+    const assigneeCanvas = document.getElementById('chartAssignee');
+    assigneeCanvas.height = 200;
+    new Chart(assigneeCanvas, {
       type: 'bar',
       data: {
         labels: assigneeData.map(d=>d.name),
@@ -7338,7 +7392,8 @@ function tt_generatePDFReport() {
         ]
       },
       options:{
-        responsive: false,
+        responsive: true,
+        maintainAspectRatio: false,
         scales:{
           x:{ stacked:true, ticks:{ font:{ size:11, family: FONT.family } }, grid:{ color:'#eee' } },
           y:{ stacked:true, beginAtZero:true, ticks:{ font:{ size:11, family: FONT.family } }, grid:{ color:'#eee' } }
@@ -7347,9 +7402,11 @@ function tt_generatePDFReport() {
       }
     });
 
-    // Category bar
+    // Category bar — height scales with number of categories
     const catFiltered = catData2.filter(c=>c.total>0);
-    new Chart(document.getElementById('chartCategory'), {
+    const catCanvas = document.getElementById('chartCategory');
+    catCanvas.height = Math.max(180, catFiltered.length * 30 + 60);
+    new Chart(catCanvas, {
       type: 'bar',
       data: {
         labels: catFiltered.map(c=>c.label.replace(/^[^ ]+ /,'')),
@@ -7359,7 +7416,8 @@ function tt_generatePDFReport() {
         ]
       },
       options:{
-        responsive: false,
+        responsive: true,
+        maintainAspectRatio: false,
         indexAxis:'y',
         scales:{
           x:{ stacked:true, beginAtZero:true, ticks:{ font:{ size:10, family: FONT.family } }, grid:{ color:'#eee' } },
